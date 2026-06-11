@@ -1,0 +1,77 @@
+{
+  "best_model": "Random Forest (300)",
+  "metrics": {
+    "ROC_AUC": 0.9352,
+    "PR_AUC": 0.6617,
+    "F1": 0.6053,
+    "Precision": 0.5026,
+    "Recall": 0.7609,
+    "Accuracy": 0.9072
+  },
+  "all_results": {
+    "Logistic Regression": {
+      "ROC_AUC": 0.8964,
+      "PR_AUC": 0.6658,
+      "F1": 0.4713,
+      "Precision": 0.3258,
+      "Recall": 0.8518,
+      "Accuracy": 0.8213
+    },
+    "Random Forest (300)": {
+      "ROC_AUC": 0.9352,
+      "PR_AUC": 0.6617,
+      "F1": 0.6053,
+      "Precision": 0.5026,
+      "Recall": 0.7609,
+      "Accuracy": 0.9072
+    },
+    "XGBoost": {
+      "ROC_AUC": 0.932,
+      "PR_AUC": 0.67,
+      "F1": 0.6093,
+      "Precision": 0.578,
+      "Recall": 0.6443,
+      "Accuracy": 0.9227
+    }
+  },
+  "top_features": [
+    "TotalReimbursement",
+    "TotalDeductible",
+    "TotalHospitalDays",
+    "InpatientClaims",
+    "MaxClaimAmt",
+    "PeakMonthClaims",
+    "ReimbPerBeneficiary",
+    "TotalClaims",
+    "UniqueBeneficiaries",
+    "StdClaimAmt",
+    "MaxDiagCodes",
+    "AvgClaimAmt",
+    "AvgHospitalStay",
+    "DeductibleRatio",
+    "OutpatientClaims",
+    "ReimbursementPerClaim",
+    "AvgUniqueProcCodes",
+    "AvgDeductible",
+    "ClaimsPerBeneficiary",
+    "AvgNumProcCodes",
+    "AvgUniqueDiagCodes",
+    "AvgClaimDuration",
+    "RenalDiseaseRatio",
+    "ClaimsPerPhysician",
+    "InpatientRatio",
+    "HighCostClaimRatio",
+    "PctHighChronicCond",
+    "RepeatPatientRatio",
+    "AvgNumDiagCodes",
+    "AvgIPDeductible",
+    "Avg_ChronicCond_KidneyDisease",
+    "Avg_ChronicCond_stroke",
+    "AvgChronicCondCount",
+    "PhysicianConcentration",
+    "AvgIPReimb"
+  ],
+  "fraud_count": 196,
+  "total_test": 1353,
+  "fraud_rate": 14.49
+}
