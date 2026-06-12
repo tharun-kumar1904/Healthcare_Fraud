@@ -8,4 +8,3 @@ nbconvert_error.txt
 fix_*.py
 generate_html.py
 oof_predictions.csv
-holdout_predictions.csv

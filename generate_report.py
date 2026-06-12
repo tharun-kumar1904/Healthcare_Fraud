@@ -246,24 +246,24 @@ add_paragraph(
     "Healthcare fraud, waste, and abuse (FWA) represent a significant financial challenge that escalates insurance premiums and drains public healthcare funds. "
     "Traditional detection methods rely on deterministic, rule-based systems that fail to detect coordinated schemes, billing rings, and patient-upcoding behaviors. "
     "This report presents a machine learning pipeline developed to identify potentially fraudulent healthcare providers. "
-    "By merging and aggregating beneficiary profiles, outpatient billings, and inpatient medical stays, I constructed 57 provider-level behavioral features."
+    "By merging and aggregating beneficiary profiles, outpatient billings, and inpatient medical stays, 57 provider-level behavioral features were constructed."
 )
 
 add_paragraph(
-    "Through statistical screening and feature selection, I isolated the top 35 signature features. "
-    "My model architecture features a Stacking Ensemble Classifier comprising XGBoost, LightGBM DART, and CatBoost as base estimators, blended using a Logistic Regression meta-classifier. "
-    "To handle target class imbalance (9.7:1 ratio), I leveraged native model class weights during training rather than synthetic oversampling, preserving natural decision boundaries."
+    "Through statistical screening and feature selection, the top 35 signature features were isolated. "
+    "The model architecture features a Stacking Ensemble Classifier comprising XGBoost, LightGBM DART, and CatBoost as base estimators, blended using a Logistic Regression meta-classifier. "
+    "To handle target class imbalance (9.7:1 ratio), native model class weights were leveraged during training rather than synthetic oversampling, preserving natural decision boundaries."
 )
 
 add_paragraph(
     "Validation was executed using 5-fold stratified cross-validation alongside an independent 10% holdout set. "
     "At the threshold of 0.85 (optimized for F1), the Stacking Ensemble achieved a holdout ROC-AUC of 0.9579, an F1-Score of 0.6441, a Recall of 74.51%, and a Precision of 56.72%. "
-    "At the F2-optimal threshold of 0.47, the model successfully recovered 90.20% of all fraud cases in the unseen set (Recall) at 39.32% Precision, providing insurance investigators with a fraud screening system."
+    "At the F2-optimal threshold of 0.47, the model successfully recovered 90.20% of all fraud cases in the holdout set (Recall) at 39.32% Precision, providing an operational fraud screening baseline."
 )
 
 add_paragraph(
     "Integrated directly into a Streamlit analytics application, this model provides real-time provider risk scoring, interactive peer comparison, SHAP feature attribution, and an investigator capacity planning framework. "
-    "My ROI analysis shows that prioritizing cases using the model's risk scores yields an optimal investigation point at 62 provider audits, generating a peak net savings of over $1.88M per inspection cohort and saving administrative hours."
+    "An ROI analysis indicates that prioritizing cases using the model's risk scores yields an optimal investigation point at 62 provider audits, generating a peak projected net savings of over $1.88M per inspection cohort and saving administrative hours."
 )
 
 doc.add_page_break()
@@ -309,7 +309,7 @@ for row_idx, row_content in enumerate(kpi_data):
 doc.add_paragraph().paragraph_format.space_before = Pt(12)
 
 add_paragraph(
-    "Discussion: The ROC-AUC of 0.9579 indicates exceptional discriminative power, ensuring that a randomly selected fraudulent provider will receive a higher risk score than a legitimate provider 95.8% of the time. "
+    "Discussion: The ROC-AUC of 0.9579 indicates strong discriminative power, ensuring that a randomly selected fraudulent provider will receive a higher risk score than a legitimate provider 95.8% of the time. "
     "The F1-score of 0.644 matches a recall of 74.5% with a precision of 56.7%. In practice, this means that more than half of the providers flagged by the model will be confirmed as fraudulent upon manual review, minimizing the administrative cost of false positives."
 )
 
@@ -320,8 +320,8 @@ doc.add_page_break()
 # ==========================================
 add_heading("3. Key Findings & Data Signatures", level=1)
 add_paragraph(
-    "A comparison of historical provider data reveals massive, systemic behavioral differences between fraudulent and legitimate healthcare providers. "
-    "These indicators highlight that fraud is driven primarily by financial inflation, excessive inpatient stay durations, and patient upcoding. "
+    "A comparison of historical provider data reveals significant behavioral differences between fraudulent and legitimate healthcare providers. "
+    "These indicators suggest that potential fraud is characterized primarily by financial inflation, longer inpatient stay durations, and patient upcoding. "
     "The table below details these key findings:"
 )
 
@@ -349,7 +349,7 @@ add_paragraph(
 
 add_paragraph(
     "To counteract these billing networks, it is necessary to aggregate individual beneficiary claims up to the provider level, enabling the identification of systematic behavioral anomalies. "
-    "Common fraud patterns targeted by my machine learning features include:"
+    "Common fraud patterns targeted by the engineered features include:"
 )
 add_paragraph("Billing for services, procedures, or medical supplies that were never actually provided to patients.", bold_prefix="• Services Not Rendered: ")
 add_paragraph("Submitting identical claim details (same procedure codes, dates, and patient IDs) multiple times to bypass payment limits.", bold_prefix="• Duplicate Claims: ")
@@ -439,7 +439,7 @@ add_paragraph("Null entries in physical code fields (e.g. diagnosis/procedure co
 add_paragraph("Duplicate claims (defined as identical provider, beneficiary, date, and reimbursement values) are identified. These duplicates represent administrative processing errors or repeat billing attempts and are logged and removed.", bold_prefix="• Deduplication: ")
 add_paragraph("Claim start and end dates are converted to datetime objects to calculate claim duration. Dates of birth are mapped to beneficiary ages, and chronic condition indicators are converted from 1/2 binary codes into standard 0/1 indicator flags.", bold_prefix="• Data Transformation: ")
 add_paragraph("All clean claims are merged with beneficiary tables and aggregated by Provider ID. We extract medians, averages, standard deviations, and ratios across claims, patient profiles, and medical costs.", bold_prefix="• Provider Aggregation: ")
-add_paragraph("The historical target data has a significant class imbalance (9.7:1 legitimate-to-fraud ratio). Instead of using synthetic oversampling (SMOTE), which can create unrealistic combinations of aggregated features, I utilized native model class weights during XGBoost, LightGBM, and CatBoost training. This maintains the physical bounds of the engineered metrics.", bold_prefix="• Native Class Imbalance Handling: ")
+add_paragraph("The historical target data has a significant class imbalance (9.7:1 legitimate-to-fraud ratio). Instead of using synthetic oversampling (SMOTE), which can create unrealistic combinations of aggregated features, native model class weights were utilized during XGBoost, LightGBM, and CatBoost training. This maintains the physical bounds of the engineered metrics.", bold_prefix="• Native Class Imbalance Handling: ")
 
 doc.add_page_break()
 
@@ -448,8 +448,8 @@ doc.add_page_break()
 # ==========================================
 add_heading("7. Exploratory Data Analysis (EDA)", level=1)
 add_paragraph(
-    "My exploratory data analysis reveals strong, systematic differences in billing volumes, medical stay durations, and reimbursement distributions between legitimate and fraudulent providers. "
-    "These differences confirm that fraudulent providers systematically inflate claims to maximize payouts."
+    "Exploratory data analysis reveals strong, systematic differences in billing volumes, medical stay durations, and reimbursement distributions between legitimate and fraudulent providers. "
+    "These differences indicate that fraudulent providers systematically inflate claims to maximize payouts."
 )
 
 add_heading("Reimbursement & Claim Distributions", level=2)
@@ -483,7 +483,7 @@ doc.add_page_break()
 # ==========================================
 add_heading("8. Feature Engineering", level=1)
 add_paragraph(
-    "To capture these complex billing patterns, I engineered 57 provider-level features across financial, volume, clinical, behavioral, and temporal categories. "
+    "To capture these complex billing patterns, 57 provider-level features were engineered across financial, volume, clinical, behavioral, and temporal categories. "
     "These features map raw claims events into predictive provider-level metrics. "
     "The primary feature categories include:"
 )
@@ -492,7 +492,7 @@ add_paragraph("Captures cumulative billing values and outlier events. Key featur
 add_paragraph("Quantifies the frequency of billing events. Key features include TotalClaims, InpatientClaims, OutpatientClaims, UniqueBeneficiaries, and ClaimsPerBeneficiary. A high ratio of claims relative to unique beneficiaries indicates repeat billing.", bold_prefix="• Volume Metrics: ")
 add_paragraph("Measures patient hospitalization length. Key features include TotalHospitalDays and AvgHospitalStay. Elevated stays indicate potential billing for unrendered bed days.", bold_prefix="• Inpatient Stay Duration: ")
 add_paragraph("Quantifies diagnosis complexity. Key features include AvgNumDiagCodes and DiagDiversityScore. Elevated values indicate diagnostic upcoding to secure higher reimbursement tiers.", bold_prefix="• Diagnostic Complexity & Upcoding: ")
-add_paragraph("Identifies physician rings and patient recycling. We calculate PhysicianConcentration (using the Herfindahl-Hirschman Index) and RepeatPatientRatio. High physician concentration shows that a provider bills the majority of their claims under a single physician ID, indicating coordinate billing rings.", bold_prefix="• Physician Concentration & Patient Recycling: ")
+add_paragraph("Identifies physician rings and patient recycling. PhysicianConcentration (using the Herfindahl-Hirschman Index) and RepeatPatientRatio were calculated. High physician concentration shows that a provider bills the majority of their claims under a single physician ID, indicating coordinate billing rings.", bold_prefix="• Physician Concentration & Patient Recycling: ")
 add_paragraph("Measures the weekend billing ratio (WeekendClaimRatio). Since legitimate medical clinics rarely bill standard outpatient claims on weekends, a high weekend billing ratio serves as a strong temporal anomaly indicator.", bold_prefix="• Temporal Anomalies: ")
 
 doc.add_page_break()
@@ -502,7 +502,7 @@ doc.add_page_break()
 # ==========================================
 add_heading("9. Model Development & Stacking Architecture", level=1)
 add_paragraph(
-    "To build a robust fraud detection system, I evaluated several machine learning models: Logistic Regression, Random Forest (300 estimators), XGBoost (Optuna-tuned), LightGBM, and CatBoost. "
+    "To build a robust fraud detection system, several machine learning models were evaluated: Logistic Regression, Random Forest (300 estimators), XGBoost (Optuna-tuned), LightGBM, and CatBoost. "
     "The final architecture utilizes a Stacking Ensemble Classifier to combine the strengths of the base models."
 )
 
@@ -515,11 +515,11 @@ add_paragraph(
 
 add_heading("Cross-Validation & Hyperparameter Optimization", level=2)
 add_paragraph(
-    "To protect against target leakage, I implemented a 5-fold Stratified Cross-Validation protocol. "
-    "Hyperparameters for XGBoost, LightGBM, and CatBoost were optimized using Optuna over 100 trials, maximizing the cross-validated F1-score."
+    "To protect against target leakage, a 5-fold Stratified Cross-Validation protocol was implemented. "
+    "Hyperparameters for the XGBoost base model were optimized using Optuna over 15 trials, while LightGBM and CatBoost utilized default baseline settings."
 )
 add_paragraph(
-    "To handle class imbalance, I configured native class weights (`scale_pos_weight` in XGBoost/LightGBM and `auto_class_weights` in CatBoost) proportional to the 9.7:1 target class ratio, avoiding the noise introduced by SMOTE."
+    "To handle class imbalance, native class weights (`scale_pos_weight` in XGBoost/LightGBM and `auto_class_weights` in CatBoost) were configured proportional to the 9.7:1 target class ratio, avoiding the noise introduced by SMOTE."
 )
 
 doc.add_page_break()
@@ -592,7 +592,7 @@ doc.add_page_break()
 # ==========================================
 add_heading("12. Fraud Insights & SHAP Feature Attribution", level=1)
 add_paragraph(
-    "To explain model predictions, I calculated SHAP (SHapley Additive exPlanations) values to capture global feature importances. "
+    "To explain model predictions, SHAP (SHapley Additive exPlanations) values were calculated to capture global feature importances. "
     "This analysis reveals the key drivers of provider fraud risk:"
 )
 
@@ -620,7 +620,7 @@ add_heading("Investigation Prioritization & ROI Framework", level=2)
 add_paragraph(
     "Traditional auditing reviews cases randomly or chronologically, resulting in low recovery rates. "
     "By sorting providers by the model's risk scores, the framework constructs an optimal audit frontier. "
-    "My ROI analysis assumes standard operational parameters: an average audit cost of $2,500 per provider, a median recovery value of $220,000 per fraud case, and a 70% audit recovery success rate."
+    "The ROI analysis is based on an illustrative business scenario with example operational assumptions: an average audit cost of $2,500 per provider, an estimated median recovery value of $220,000 per potential fraud case, and a projected 70% audit recovery success rate."
 )
 
 roi_headers = ["Audit Capacity", "Expected Fraud Cases", "Cumulative Audit Cost", "Potential Recovery", "Net Savings (ROI)"]
@@ -635,9 +635,9 @@ create_table(roi_headers, roi_data, widths=[Inches(1.5), Inches(1.5), Inches(1.5
 
 add_heading("The Optimal Audit Frontier", level=2)
 add_paragraph(
-    "As shown in the table, auditing the top 62 highest-risk providers yields a peak ROI of $6,251,400 in net savings. "
+    "As shown in the table, under this illustrative scenario, auditing the top 62 highest-risk providers projects a peak estimated net savings of $6,251,400. "
     "Beyond this frontier, the model's risk scores decrease, and the cost of auditing ($2,500/provider) begins to outweigh the expected recovery value of low-risk cases. "
-    "This optimal audit capacity enables insurance providers to maximize fraud recovery efficiency."
+    "This estimated optimal audit capacity provides a target baseline to optimize audit recovery efficiency."
 )
 
 doc.add_page_break()
@@ -647,12 +647,12 @@ doc.add_page_break()
 # ==========================================
 add_heading("14. Practical Deployment Strategy", level=1)
 add_paragraph(
-    "To integrate the stacking classifier into daily operations at a health insurance firm, I propose a five-stage deployment roadmap:"
+    "To integrate the stacking classifier into daily operations at a health insurance firm, a five-stage deployment roadmap is proposed:"
 )
 
 add_paragraph("The scoring engine runs monthly, ingesting the latest cycle of inpatient and outpatient claims. It outputs risk probabilities for all active billing providers.", bold_prefix="1. Monthly Batch Scoring: ")
 add_paragraph("Providers are ranked by their risk scores. High-probability outliers are queued for the Special Investigations Unit (SIU), replacing manual case picking with a prioritized audit pipeline.", bold_prefix="2. Risk-Based Priority Queueing: ")
-add_paragraph("I define action thresholds based on risk tiers: High Risk (>=0.85) triggers immediate payment holds and comprehensive audit requests; Medium Risk (0.50-0.84) triggers pre-payment medical record reviews; Low Risk (<0.50) is logged for standard monitoring.", bold_prefix="3. Tiered Operational Action Directives: ")
+add_paragraph("Action thresholds are defined based on risk tiers: High Risk (>=0.85) triggers immediate payment holds and comprehensive audit requests; Medium Risk (0.50-0.84) triggers pre-payment medical record reviews; Low Risk (<0.50) is logged for standard monitoring.", bold_prefix="3. Tiered Operational Action Directives: ")
 add_paragraph("Audit results (fraud confirmed vs. false positives) are logged. These validated outcomes are fed back into the training data, forming a feedback loop to improve future scoring runs.", bold_prefix="4. Closed-Loop Review Feedback: ")
 add_paragraph("To protect against model drift, the pipeline automatically retrains the stacking classifier quarterly, integrating fresh labels and updating base model weights.", bold_prefix="5. Scheduled Model Retraining: ")
 
@@ -663,7 +663,7 @@ doc.add_page_break()
 # ==========================================
 add_heading("15. Streamlit Application & Dashboard Layout", level=1)
 add_paragraph(
-    "I deployed the machine learning pipeline into a professional, enterprise-grade Streamlit application. "
+    "The machine learning pipeline was integrated into an interactive Streamlit application. "
     "The application contains 6 primary pages to support clinical and financial fraud audits:"
 )
 
@@ -768,17 +768,17 @@ doc.add_page_break()
 # ==========================================
 add_heading("16. Conclusion & Operational Recommendations", level=1)
 add_paragraph(
-    "This case study demonstrates the effectiveness of combining provider-level feature engineering with a machine learning Stacking Ensemble to identify healthcare billing fraud. "
-    "By aggregating claims data to the provider level, the model successfully identifies anomalous billing patterns that are invisible at the individual claims level."
+    "This case study demonstrates the feasibility of combining provider-level feature engineering with a machine learning Stacking Ensemble to identify healthcare billing fraud. "
+    "By aggregating claims data to the provider level, the ensemble framework identifies anomalous billing patterns that are invisible at the individual claims level."
 )
 
 add_paragraph(
     "The Stacking Ensemble (XGBoost, LightGBM, CatBoost, and a Logistic Regression meta-classifier) achieved a holdout ROC-AUC of 0.9579, an F1-Score of 0.6441, a Recall of 74.51%, and a Precision of 56.72% at the F1-optimal threshold. "
-    "At the F2-optimal threshold of 0.47, the model recovered 90.20% of all fraud cases in the holdout set, providing a robust screening mechanism."
+    "At the F2-optimal threshold of 0.47, the model recovered 90.20% of all fraud cases in the holdout set, providing an operational screening baseline."
 )
 
 add_paragraph(
-    "For deployment and integration, I recommend the following next steps:"
+    "For operational deployment and integration, the following next steps are recommended:"
 )
 add_paragraph("Configure the Streamlit dashboard to score incoming claims batches monthly, flagging high-risk providers for pre-payment review.", bold_prefix="• Batch Scoring Integration: ")
 add_paragraph("For routine audits, utilize the F1-optimal threshold (0.85). For comprehensive screening campaigns, utilize the F2-optimal threshold (0.47) to capture 9 out of 10 potential fraud cases.", bold_prefix="• Dynamic Threshold Strategy: ")
@@ -795,19 +795,12 @@ add_heading("17. Appendix", level=1)
 add_heading("Project Directory Structure", level=2)
 struct_text = (
     " Healthcare_Fraud_Detection/\n"
-    " ├── Data/\n"
-    " │   ├── Training Data/                 # Historical claims and beneficiary details\n"
-    " │   └── Unseen Data/                   # Unseen test set claims data\n"
-    " ├── streamlit_app.py                  # Streamlit dashboard script\n"
-    " ├── generate_report.py                # Report generator script (python-docx)\n"
-    " ├── generate_html.py                  # HTML conversion utility\n"
-    " ├── run_pipeline.py                   # Data aggregation & modeling pipeline\n"
-    " ├── Healthcare_Fraud_Detection.ipynb  # Interactive notebook\n"
+    " ├── streamlit_app.py                  # Streamlit dashboard application\n"
+    " ├── run_pipeline.py                   # Model training and pipeline script\n"
+    " ├── Healthcare_Fraud_Detection.ipynb  # Main analysis Jupyter Notebook\n"
     " ├── best_model.pkl                    # Serialized Stacking Ensemble model\n"
     " ├── top_features.pkl                  # Serialized list of top 35 features\n"
-    " ├── model_results.csv                 # Metrics CSV for all models evaluated\n"
-    " ├── pipeline_summary.json             # Execution summary metadata\n"
-    " ├── Submission.csv                    # Final predictions output file\n"
+    " ├── Tharun Kumar V_Submission.csv     # Final predictions output file\n"
     " └── Healthcare_Provider_Fraud_Detection_Report.docx  # Final Case Study Report\n"
 )
 p_struct = doc.add_paragraph()
