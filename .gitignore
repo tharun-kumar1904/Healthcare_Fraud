@@ -10,3 +10,5 @@ generate_html.py
 provider_eda_summary.csv
 oof_predictions.csv
 holdout_predictions.csv
+*.pkl
+test_provider_summary.csv
