@@ -10,126 +10,44 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+# Set page config with standard, native Streamlit parameters
 st.set_page_config(
-    page_title="Healthcare Fraud Detector Case Study",
+    page_title="Healthcare Fraud Analytics Platform",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# Inject clean, minimal CSS for page max-width and layout spacing without adding decorative templates
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
-    color: #cbd5e1;
 }
 
-[data-testid="stSidebar"] {
-    background-color: #0f172a !important;
-    border-right: 1px solid #1e293b !important;
-}
-[data-testid="stSidebar"] * {
-    color: #cbd5e1 !important;
-}
-[data-testid="stSidebar"] .stRadio > label {
-    color: #cbd5e1 !important;
-}
-
-.main {
-    background-color: #0b0f19;
-}
-
-.kpi-card {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 6px;
-    padding: 1.25rem 1rem;
-    text-align: center;
-    transition: border-color 0.2s ease;
-}
-.kpi-card:hover {
-    border-color: #2563eb;
-}
-.kpi-val {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #f8fafc;
-}
-.kpi-lbl {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 0.25rem;
-}
-
-.section-hdr {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #f8fafc;
-    border-left: 4px solid #1f4e79;
-    padding-left: 0.75rem;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.insight-box {
-    background-color: rgba(37, 99, 235, 0.08);
-    border-left: 4px solid #2563eb;
-    border-radius: 0 4px 4px 0;
-    padding: 0.75rem 1rem;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    color: #cbd5e1;
-    line-height: 1.5;
-}
-
-.badge-critical { background-color: rgba(220, 38, 38, 0.15); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem; display: inline-block; }
-.badge-high { background-color: rgba(217, 119, 6, 0.15); color: #f59e0b; border: 1px solid rgba(217, 119, 6, 0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem; display: inline-block; }
-.badge-watch { background-color: rgba(234, 179, 8, 0.15); color: #fbbf24; border: 1px solid rgba(234, 179, 8, 0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem; display: inline-block; }
-.badge-low { background-color: rgba(22, 163, 74, 0.15); color: #4ade80; border: 1px solid rgba(22, 163, 74, 0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem; display: inline-block; }
-
-.multiplier-box {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 6px;
-    padding: 1rem;
-    text-align: left;
-}
-.multiplier-val {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #dc2626;
-}
-.multiplier-lbl {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #f8fafc;
-    margin-top: 0.25rem;
-}
-.multiplier-desc {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    margin-top: 0.25rem;
+div.block-container {
+    padding-top: 1.5rem !important;
+    padding-bottom: 2rem !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
+# Standard colors representing corporate insurance metrics
+COLOR_FRAUD = "#dc2626"  # red
+COLOR_LEGIT = "#16a34a"  # green
+COLOR_PRIMARY = "#1f4e79"  # corporate navy
+COLOR_ACCENT = "#2563eb"  # vibrant blue
+
+# Global layout configuration dictionary for Plotly visualizations
 PLOTLY_LAYOUT = dict(
-    template="plotly_dark",
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter", color="#cbd5e1", size=12),
+    font=dict(family="Inter", size=12),
     margin=dict(l=20, r=20, t=40, b=20),
 )
 
-COLOR_FRAUD = "#dc2626"
-COLOR_LEGIT = "#16a34a"
-COLOR_PRIMARY = "#1f4e79"
-COLOR_ACCENT = "#2563eb"
-
+# Helper function to load model artifacts safely
 @st.cache_resource
 def load_model_artifacts():
     try:
@@ -141,8 +59,9 @@ def load_model_artifacts():
     except Exception:
         return None, None
 
+# Helper function to load the model comparison metrics matrix
 @st.cache_data
-def load_model_results_csv():
+def load_model_results():
     try:
         df = pd.read_csv("model_results.csv", index_col=0)
         return df
@@ -167,6 +86,7 @@ def load_model_results_csv():
             "Logistic Regression"
         ])
 
+# Helper function to load test set predictions output file
 @st.cache_data
 def load_submission_data():
     try:
@@ -174,6 +94,7 @@ def load_submission_data():
     except Exception:
         return None
 
+# Helper function to load global SHAP importance scores
 @st.cache_data
 def load_shap_data():
     try:
@@ -189,43 +110,42 @@ def load_shap_data():
             "MaxDiagCodes", "AvgUniqueProcCodes", "DeductibleRatio"
         ])
 
+# Helper function to load the holdout set prediction details
 @st.cache_data
-def load_holdout_predictions_data():
+def load_holdout_predictions():
     try:
         return pd.read_csv("holdout_predictions.csv")
     except Exception:
         return None
 
+# Helper function to load training provider features summary
 @st.cache_data
-def load_provider_eda_data():
+def load_provider_eda():
     try:
         return pd.read_csv("provider_eda_summary.csv")
     except Exception:
         return None
 
+# Helper function to load test provider features summary
 @st.cache_data
-def load_test_provider_data():
+def load_test_provider_summary():
     try:
         return pd.read_csv("test_provider_summary.csv")
     except Exception:
         return None
 
+# Load all datasets into memory
 model, top_features = load_model_artifacts()
-results_df = load_model_results_csv()
+results_df = load_model_results()
 submission = load_submission_data()
 shap_df = load_shap_data()
-holdout_predictions = load_holdout_predictions_data()
-provider_eda = load_provider_eda_data()
-test_provider_eda = load_test_provider_data()
+holdout_predictions = load_holdout_predictions()
+provider_eda = load_provider_eda()
+test_provider_eda = load_test_provider_summary()
 
-st.sidebar.markdown("""
-<div style='text-align:center;padding:1rem 0;margin-bottom:1rem'>
-  <div style='font-size:1.1rem;font-weight:700;color:#f8fafc;letter-spacing:0.5px;'>FRAUD ANALYTICS</div>
-  <div style='font-size:0.75rem;color:#94a3b8;margin-top:0.2rem;'>Decision Support Platform</div>
-</div>
-""", unsafe_allow_html=True)
-
-page = st.sidebar.radio("", [
+# Define navigation links inside sidebar
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to Page", [
     "Overview",
     "Fraud Patterns",
     "Data Analysis",
@@ -234,136 +154,106 @@ page = st.sidebar.radio("", [
     "Business Impact"
 ])
 
-st.sidebar.markdown("<br><br><hr style='border-color:#334155;'>", unsafe_allow_html=True)
-st.sidebar.markdown("<div style='color:#94a3b8;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;'>MODEL COMPLIANCE</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div style='color:#16a34a;font-size:0.85rem;font-weight:600;'>ROC-AUC: 0.9579 (Holdout)</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div style='color:#2563eb;font-size:0.85rem;font-weight:600;'>Ensemble: XGB + LGBM + Cat</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div style='color:#d97706;font-size:0.85rem;font-weight:600;'>Validation: 5-Fold CV + Holdout</div>", unsafe_allow_html=True)
-
-st.markdown("""
-<div style="background-color: #1f4e79; padding: 1.5rem; border-radius: 6px; margin-bottom: 1.5rem; border: 1px solid #2563eb;">
-  <h1 style="color: #ffffff; margin: 0; font-size: 2rem; font-weight: 700; letter-spacing: -0.5px;">Healthcare Provider Fraud Detection</h1>
-  <p style="color: #f8fafc; margin: 0.25rem 0 0 0; font-size: 1.05rem; font-weight: 500;">Machine Learning Based Risk Assessment Platform</p>
-  <p style="color: #cbd5e1; margin: 0.5rem 0 0 0; font-size: 0.9rem; line-height: 1.4;">Detect high-risk providers using claims, reimbursement patterns and patient behavior.</p>
-</div>
-""", unsafe_allow_html=True)
-
+# Native page layouts
 if page == "Overview":
-    c1, c2, c3, c4, c5 = st.columns(5)
-    c1.markdown("<div class='kpi-card'><div class='kpi-val'>5,410</div><div class='kpi-lbl'>Training Providers</div></div>", unsafe_allow_html=True)
-    c2.markdown("<div class='kpi-card'><div class='kpi-val'>558K</div><div class='kpi-lbl'>Claims Processed</div></div>", unsafe_allow_html=True)
-    c3.markdown("<div class='kpi-card'><div class='kpi-val'>95.79%</div><div class='kpi-lbl'>Holdout ROC-AUC</div></div>", unsafe_allow_html=True)
-    c4.markdown("<div class='kpi-card'><div class='kpi-val'>74.51%</div><div class='kpi-lbl'>Holdout Recall</div></div>", unsafe_allow_html=True)
-    c5.markdown("<div class='kpi-card'><div class='kpi-val'>12.49%</div><div class='kpi-lbl'>Test Fraud Rate</div></div>", unsafe_allow_html=True)
-
+    st.title("Healthcare Provider Fraud Detection Platform")
+    st.write("Detect high-risk healthcare providers using inpatient/outpatient claims, reimbursement anomalies, and patient behavioral patterns.")
+    
+    st.divider()
+    
+    # Display native metric widgets
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("Training Providers", "5,410")
+    m2.metric("Claims Processed", "558K")
+    m3.metric("Holdout ROC-AUC", "95.79%")
+    m4.metric("Holdout Recall", "74.51%")
+    m5.metric("Test Fraud Rate", "12.49%")
+    
+    st.divider()
+    
     col_l, col_r = st.columns([1.1, 1])
     
     with col_l:
-        st.markdown('<div class="section-hdr">Executive Summary</div>', unsafe_allow_html=True)
+        st.subheader("System Objective & Problem Statement")
         st.write("""
-        Healthcare provider fraud costs the US insurance industry billions of dollars annually. Fraudulent activities range from billing for unrendered services (ghost patients) to systematic upcoding of diagnostic procedures to claim higher payouts.
+        Healthcare fraud, waste, and abuse significantly inflate insurance premiums and drain resources. 
+        Traditional rule-based systems struggle to identify complex billing patterns. 
+        This platform leverages a machine learning stacking ensemble to flag anomalous providers.
         
-        This platform delivers an advanced predictive machine learning solution to flag anomalous providers. By aggregating inpatient and outpatient claims at the provider level, the system identifies behavioral outliers.
-        
-        The predictive engine uses a Stacking Ensemble classifier that integrates XGBoost, LightGBM, and CatBoost models. Cross-validation and holdout validation show strong generalizability and zero overfitting, establishing stable operational utility.
+        By aggregating patient-level claims to the provider level, the system highlights behaviors that deviate significantly from peers.
+        This provides investigators with clear metrics to prioritize targets.
         """)
         
-        st.markdown('<div class="section-hdr">Key Operational Pillars</div>', unsafe_allow_html=True)
+        st.subheader("Key Findings & Multipliers")
         st.write("""
-        - **Overview**: System overview, validation metrics, and data summaries.
-        - **Fraud Patterns**: Primary risk indicators, global SHAP feature importances, and glossary.
-        - **Data Analysis**: Distribution shift boxplots, capped stay violin plots, and annotated claims scatter.
-        - **Model Evaluation**: Grouped performance benchmarks and interactive confusion matrices.
-        - **Predictions**: Search-driven provider risk scoring, top risk drivers, and batch submissions.
-        - **Business Impact**: Financial ROI calculators and optimal threshold selection.
+        Analysis of the historical training data reveals major differences between legitimate and fraudulent providers:
+        * **Reimbursements**: Fraudulent providers claim a median of **$373,450** compared to **$15,055** for legitimate peers (**24.8x higher**).
+        * **Claim Volume**: Fraudulent providers submit a median of **155.5 claims** compared to **27.0** for legitimate peers (**5.8x higher**).
+        * **Hospital Stays**: Hospital stay duration averages **265.6 days** for fraudulent providers compared to **19.4 days** for legitimate peers (**13.7x longer**).
         """)
 
     with col_r:
-        st.markdown('<div class="section-hdr">Validation Generalization (CV vs Holdout)</div>', unsafe_allow_html=True)
+        st.subheader("Model Generalization (CV vs Holdout)")
         
+        # Build comparison dataset
         cv_vs_ho = pd.DataFrame({
             "Metric": ["ROC-AUC", "PR-AUC", "F1 Score", "Recall", "Precision", "Accuracy"],
             "5-Fold CV": [0.9345, 0.6822, 0.6332, 0.7209, 0.5645, 0.9220],
             "Unseen Holdout": [0.9579, 0.7553, 0.6441, 0.7451, 0.5672, 0.9224]
         })
         
+        # Create plotly validation comparison chart
         fig = go.Figure()
         fig.add_trace(go.Bar(
             x=cv_vs_ho["Metric"], y=cv_vs_ho["5-Fold CV"],
-            name="5-Fold CV", marker_color="rgba(31, 78, 121, 0.8)"
+            name="5-Fold CV", marker_color="#1f4e79"
         ))
         fig.add_trace(go.Bar(
             x=cv_vs_ho["Metric"], y=cv_vs_ho["Unseen Holdout"],
-            name="Unseen Holdout Set", marker_color="rgba(22, 163, 74, 0.8)"
+            name="Unseen Holdout Set", marker_color="#16a34a"
         ))
-        fig.update_layout(**PLOTLY_LAYOUT, height=270, barmode="group",
-                          legend=dict(orientation="h", y=-0.15, x=0.2))
+        
+        plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+        plotly_layout_cfg.update(height=260, barmode="group", legend=dict(orientation="h", y=-0.2, x=0.15))
+        fig.update_layout(**plotly_layout_cfg)
         st.plotly_chart(fig, use_container_width=True)
         
-        st.markdown("""
-        <div class="insight-box">
-          <strong>Validation Insight:</strong> The model performs consistently on both validation sets. The holdout ROC-AUC of 0.9579 slightly exceeds the CV score of 0.9345, which confirms that the feature engineering and stacking layers generalize well without overfitting.
-        </div>
-        """, unsafe_allow_html=True)
+        st.info("The model demonstrates stable performance on the unseen holdout set. The holdout ROC-AUC of 0.9579 closely matches the cross-validation score, indicating a reliable, generalizable model fit.")
 
 elif page == "Fraud Patterns":
-    st.markdown('<div class="section-hdr">Key Fraud Indicators</div>', unsafe_allow_html=True)
+    st.title("Fraud Patterns")
+    st.write("What behaviors distinguish fraudulent providers?")
     
-    m1, m2, m3, m4 = st.columns(4)
-    with m1:
-        st.markdown("""
-        <div class="multiplier-box">
-          <div class="multiplier-val">24.8x</div>
-          <div class="multiplier-lbl">Higher Reimbursement</div>
-          <div class="multiplier-desc">Fraudulent providers claim a median of $373,450 vs. $15,055 for legitimate peers.</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with m2:
-        st.markdown("""
-        <div class="multiplier-box">
-          <div class="multiplier-val">5.8x</div>
-          <div class="multiplier-lbl">Higher Claim Volume</div>
-          <div class="multiplier-desc">Fraudulent providers submit a median of 155.5 claims vs. 27.0 for legitimate peers.</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with m3:
-        st.markdown("""
-        <div class="multiplier-box">
-          <div class="multiplier-val">13.7x</div>
-          <div class="multiplier-lbl">Longer Hospital Stays</div>
-          <div class="multiplier-desc">Average patient stay duration is 265.6 days for fraud cases vs. 19.4 days for legitimate peers.</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with m4:
-        st.markdown("""
-        <div class="multiplier-box">
-          <div class="multiplier-val">1.3x</div>
-          <div class="multiplier-lbl">Chronic Conditions</div>
-          <div class="multiplier-desc">Patients billed by fraud-linked providers average 4.8 chronic conditions vs. 3.7 for legitimate peers.</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown('<div class="section-hdr">Global Feature Importance (SHAP)</div>', unsafe_allow_html=True)
+    st.divider()
     
+    # Provider aggregated statistics multipliers
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Median Reimbursements", "24.8x Higher", "Fraud: $373.4K vs Legit: $15.0K", delta_color="inverse")
+    c2.metric("Median Claim Volume", "5.8x Higher", "Fraud: 155.5 vs Legit: 27.0", delta_color="inverse")
+    c3.metric("Hospital Stay Duration", "13.7x Longer", "Fraud: 265.6d vs Legit: 19.4d", delta_color="inverse")
+    c4.metric("Avg Chronic Conditions", "1.3x Higher", "Fraud: 4.8 vs Legit: 3.7", delta_color="inverse")
+    
+    st.divider()
+    
+    st.subheader("Global Feature Importance (SHAP Scores)")
     if shap_df is not None:
         top_15_shap = shap_df.head(15).reset_index()
         top_15_shap.columns = ["Feature", "Score"]
+        
         fig = px.bar(
             top_15_shap, x="Score", y="Feature", orientation="h",
-            color_discrete_sequence=[COLOR_PRIMARY]
+            color_discrete_sequence=["#1f4e79"]
         )
-        fig.update_layout(**PLOTLY_LAYOUT, height=380, xaxis_title="SHAP Value (Global Impact)", yaxis_title=None)
+        
+        plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+        plotly_layout_cfg.update(height=360, xaxis_title="Global Impact Score", yaxis_title=None)
+        fig.update_layout(**plotly_layout_cfg)
         fig.update_yaxes(autorange="reversed")
         st.plotly_chart(fig, use_container_width=True)
         
-    st.markdown("""
-    <div class="insight-box">
-      <strong>SHAP Insight:</strong> TotalReimbursement stands out as the most predictive feature, followed by TotalHospitalDays and TotalDeductible. This highlights that financial and inpatient stay durations are the strongest global signals for identifying fraud.
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("SHAP analysis shows that total claims reimbursement and total hospital days are the strongest indicators of billing fraud, followed by upcoding features (diagnosis codes count).")
 
-    st.markdown('<div class="section-hdr">Features Glossary</div>', unsafe_allow_html=True)
-    
+    st.subheader("Selected Features Glossary")
     glossary_data = pd.DataFrame([
         {"Category": "Financial", "Feature Name": "TotalReimbursement", "Description": "Sum of all claim payouts", "Fraud Relevance": "Primary fraud multiplier indicator"},
         {"Category": "Financial", "Feature Name": "AvgClaimAmt", "Description": "Mean reimbursement per claim", "Fraud Relevance": "High averages indicate upcoding"},
@@ -381,68 +271,57 @@ elif page == "Fraud Patterns":
         {"Category": "Behavioral", "Feature Name": "PhysicianConcentration", "Description": "Attending physician Herfindahl index", "Fraud Relevance": "High concentration signals physician syndicates"},
         {"Category": "Temporal", "Feature Name": "WeekendClaimRatio", "Description": "Fraction of claims on Saturday/Sunday", "Fraud Relevance": "Legitimate providers rarely bill on weekends"}
     ])
-    
     st.dataframe(glossary_data, use_container_width=True)
 
 elif page == "Data Analysis":
-    st.markdown('<div class="section-hdr">Claim Amount Distribution</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background-color:#1e293b; padding:0.75rem; border-radius:6px; margin-bottom:0.75rem; border-left:4px solid #dc2626;">
-      <strong>Median Billing Level Comparison:</strong><br>
-      • Fraudulent: <strong>$373,450</strong> &nbsp;|&nbsp; • Legitimate: <strong>$15,055</strong><br>
-      • Fraudulent provider billing is <strong>24.8x higher</strong> than legitimate peers.
-    </div>
-    """, unsafe_allow_html=True)
-
+    st.title("Data Analysis")
+    st.write("Detailed visual analysis of the provider behavioral distributions.")
+    
+    st.subheader("Claim Amount Distribution")
+    st.write("Median Claim Reimbursements: **Fraudulent: $373,450** vs **Legitimate: $15,055**")
+    
     if provider_eda is not None:
         fig_df = provider_eda.copy()
         fig_df["PotentialFraud"] = fig_df["PotentialFraud"].map({"Yes": "Fraudulent", "No": "Legitimate"})
         
+        # Plotly Box Plot for Claim Amounts on a log scale
         fig = px.box(
             fig_df, y="TotalReimbursement", x="PotentialFraud", color="PotentialFraud",
             color_discrete_map={"Legitimate": COLOR_LEGIT, "Fraudulent": COLOR_FRAUD},
             log_y=True, points="outliers"
         )
-        fig.update_layout(**PLOTLY_LAYOUT, height=300, xaxis_title=None, yaxis_title="Total Reimbursement ($) - Log Scale")
+        plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+        plotly_layout_cfg.update(height=280, xaxis_title=None, yaxis_title="Total Reimbursement ($) - Log Scale")
+        fig.update_layout(**plotly_layout_cfg)
         st.plotly_chart(fig, use_container_width=True)
         
-    st.markdown("""
-    <div class="insight-box">
-      <strong>Chart Insight:</strong> The log-scale box plot shows a complete upward shift in the billing distribution for fraudulent providers. The entire IQR for fraudulent providers sits well above the 75th percentile of legitimate providers, demonstrating systematic financial inflation.
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("Business Insight: The box plot shows that the reimbursement distribution for fraudulent providers is entirely shifted upward. This confirms systematic financial inflation compared to normal peer cohorts.")
 
-    st.markdown('<div class="section-hdr">Hospital Stay Duration Distribution</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background-color:#1e293b; padding:0.75rem; border-radius:6px; margin-bottom:0.75rem; border-left:4px solid #dc2626;">
-      <strong>Average Hospital Stay Duration Comparison:</strong><br>
-      • Fraudulent: <strong>265.6 days</strong> &nbsp;|&nbsp; • Legitimate: <strong>19.4 days</strong><br>
-      • Fraud stay duration is <strong>13.7x longer</strong> than legitimate peers.
-    </div>
-    """, unsafe_allow_html=True)
-
+    st.subheader("Hospital Stay Duration Distribution")
+    st.write("Average Hospital Stay (Total Bed Days): **Fraudulent: 265.6 days** vs **Legitimate: 19.4 days**")
+    
     if provider_eda is not None:
+        # Capping stays at 99th percentile to remove extreme anomalies (e.g. 3000 days stay)
         cap_val = provider_eda["TotalHospitalDays"].quantile(0.99)
         capped_df = provider_eda[provider_eda["TotalHospitalDays"] <= cap_val].copy()
         capped_df["PotentialFraud"] = capped_df["PotentialFraud"].map({"Yes": "Fraudulent", "No": "Legitimate"})
         
         st.warning("Extreme outliers hidden for readability. The 99th percentile capped view restricts the y-axis to 654 days.")
         
+        # Plotly Violin plot representing distribution
         fig = px.violin(
             capped_df, y="TotalHospitalDays", x="PotentialFraud", color="PotentialFraud",
             color_discrete_map={"Legitimate": COLOR_LEGIT, "Fraudulent": COLOR_FRAUD},
             box=True, points=None
         )
-        fig.update_layout(**PLOTLY_LAYOUT, height=300, xaxis_title=None, yaxis_title="Hospital Stay Days (Capped)")
+        plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+        plotly_layout_cfg.update(height=280, xaxis_title=None, yaxis_title="Hospital Stay Days (Capped)")
+        fig.update_layout(**plotly_layout_cfg)
         st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("""
-    <div class="insight-box">
-      <strong>Chart Insight:</strong> Legitimate providers cluster tightly below 50 hospital days. Capping at the 99th percentile reveals that fraudulent providers present an extremely wide distribution that stretches to hundreds of days. This represents extended inpatient claims designed to draw daily bed-day payouts.
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("Business Insight: Legitimate providers cluster tightly under 50 total hospital stay days. Fraudulent providers show a wide stay distribution. This indicates billing for unrendered inpatient bed days.")
 
-    st.markdown('<div class="section-hdr">Reimbursement vs Claims Scatter</div>', unsafe_allow_html=True)
+    st.subheader("Reimbursement vs Claims Scatter")
     
     if provider_eda is not None:
         scatter_df = provider_eda.copy()
@@ -452,32 +331,34 @@ elif page == "Data Analysis":
             scatter_df, x="TotalClaims", y="TotalReimbursement", color="PotentialFraud",
             color_discrete_map={"Legitimate": COLOR_LEGIT, "Fraudulent": COLOR_FRAUD}
         )
+        
+        # Calculate linear regression line via numpy polyfit to avoid statsmodels import dependencies
         x_data = scatter_df["TotalClaims"].values
         y_data = scatter_df["TotalReimbursement"].values
         m, c = np.polyfit(x_data, y_data, 1)
         x_fit = np.linspace(x_data.min(), x_data.max(), 100)
         y_fit = m * x_fit + c
+        
         fig.add_trace(go.Scatter(
             x=x_fit, y=y_fit, mode="lines", name="Linear Trendline",
             line=dict(color="#2563eb", width=2)
         ))
+        
+        # Add simple, clean text annotation to label the outlier cluster
         fig.add_annotation(
-            x=150, y=373000,
-            text="Critical Fraud Cluster<br>(Disproportionate Billings)",
-            showarrow=True, arrowhead=1, ax=50, ay=-50,
-            font=dict(color="#f8fafc", size=10),
-            bgcolor="#dc2626", bordercolor="#dc2626", borderwidth=1, borderpad=4
+            x=250, y=1200000,
+            text="High-risk billing outliers (top-right)",
+            showarrow=True, arrowhead=1, ax=40, ay=-40
         )
-        fig.update_layout(**PLOTLY_LAYOUT, height=320, xaxis_title="Total Claims Count", yaxis_title="Total Reimbursement ($)")
+        
+        plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+        plotly_layout_cfg.update(height=300, xaxis_title="Total Claims Count", yaxis_title="Total Reimbursement ($)")
+        fig.update_layout(**plotly_layout_cfg)
         st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("""
-    <div class="insight-box">
-      <strong>Chart Insight:</strong> Legitimate providers are highly concentrated in the bottom-left quadrant. Fraudulent providers scatter into the upper-right quadrant, showing disproportionately high billings. The fitted trendline highlights how far these outliers deviate from the volume-to-value ratio of peers.
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("Business Insight: Normal providers remain in the bottom-left of the volume scatter. High-risk outliers deviate significantly, generating high revenues from low-to-moderate claims numbers.")
 
-    st.markdown('<div class="section-hdr">Feature Correlation (8x8 Signature Metrics)</div>', unsafe_allow_html=True)
+    st.subheader("Feature Correlation (8x8 Signature Metrics)")
     
     corr_cols = [
         'TotalReimbursement', 'TotalClaims', 'UniqueBeneficiaries',
@@ -486,44 +367,45 @@ elif page == "Data Analysis":
     ]
     if provider_eda is not None:
         corr_mat = provider_eda[[c for c in corr_cols if c in provider_eda.columns]].corr()
+        
         fig = px.imshow(
             corr_mat.values, x=corr_mat.columns, y=corr_mat.columns,
             color_continuous_scale="RdBu", zmin=-1, zmax=1
         )
-        fig.update_layout(**PLOTLY_LAYOUT, height=320)
+        plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+        plotly_layout_cfg.update(height=300)
+        fig.update_layout(**plotly_layout_cfg)
         st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("""
-    <div class="insight-box">
-      <strong>Chart Insight:</strong> Financial metrics (TotalReimbursement) and volume metrics (TotalClaims, UniqueBeneficiaries) correlate highly, as expected. However, strong correlations between TotalHospitalDays and financial metrics show how critical inpatient length-of-stay is to fraud revenue generation.
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("Business Insight: Strong positive correlation signatures between hospital stay days and billing values demonstrate that inpatient stay length is a major operational driver for fraud revenues.")
 
 elif page == "Model Evaluation":
-    st.markdown('<div class="section-hdr">Model Performance Benchmark</div>', unsafe_allow_html=True)
+    st.title("Model Evaluation")
+    st.write("How reliable is the model?")
+    
+    st.divider()
     
     cv_rocs = results_df["ROC_AUC_CV"].values
     ho_rocs = [x if pd.notna(x) else 0.0 for x in results_df["ROC_AUC_Holdout"].values]
     
+    # Model comparison bar chart
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=results_df.index, y=cv_rocs, name="CV ROC-AUC", marker_color="rgba(31, 78, 121, 0.8)"))
-    fig.add_trace(go.Bar(x=results_df.index, y=ho_rocs, name="Holdout ROC-AUC", marker_color="rgba(22, 163, 74, 0.8)"))
-    fig.update_layout(**PLOTLY_LAYOUT, height=270, barmode="group", legend=dict(orientation="h", y=-0.15, x=0.25))
+    fig.add_trace(go.Bar(x=results_df.index, y=cv_rocs, name="CV ROC-AUC", marker_color="#1f4e79"))
+    fig.add_trace(go.Bar(x=results_df.index, y=ho_rocs, name="Holdout ROC-AUC", marker_color="#16a34a"))
+    plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+    plotly_layout_cfg.update(height=260, barmode="group", legend=dict(orientation="h", y=-0.2, x=0.25))
+    fig.update_layout(**plotly_layout_cfg)
     st.plotly_chart(fig, use_container_width=True)
     
-    st.dataframe(results_df.style.background_gradient(subset=["ROC_AUC_CV", "ROC_AUC_Holdout"], cmap="Blues"), use_container_width=True)
+    st.dataframe(results_df, use_container_width=True)
     
-    st.markdown("""
-    <div class="insight-box">
-      <strong>Model Comparison Insight:</strong> The Stacking Ensemble (XGBoost + LightGBM + CatBoost) out-performs single models. Achieving a holdout ROC-AUC of 0.9579 establishes stable predictive fit and generalizes effectively.
-    </div>
-    """, unsafe_allow_html=True)
+    st.divider()
 
-    st.markdown('<div class="section-hdr">Decision Threshold & Confusion Matrix</div>', unsafe_allow_html=True)
-    
+    st.subheader("Decision Threshold & Confusion Matrix")
     th_select = st.slider("Select Decision Threshold", 0.0, 1.0, 0.8465, step=0.01)
     
     if holdout_predictions is not None:
+        # Recalculate predictions based on selected slider threshold
         preds = (holdout_predictions['Predicted_Probability'] >= th_select).astype(int)
         actuals = holdout_predictions['Actual_Label'].values
         
@@ -540,7 +422,9 @@ elif page == "Model Evaluation":
                 z_vals, x=["Predicted Legit", "Predicted Fraud"], y=["Actual Legit", "Actual Fraud"],
                 color_continuous_scale="Blues", text_auto=True
             )
-            fig.update_layout(**PLOTLY_LAYOUT, height=220, coloraxis_showscale=False)
+            plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+            plotly_layout_cfg.update(height=200, coloraxis_showscale=False)
+            fig.update_layout(**plotly_layout_cfg)
             st.plotly_chart(fig, use_container_width=True)
             
         with c_m2:
@@ -549,91 +433,104 @@ elif page == "Model Evaluation":
             f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
             acc = (tp + tn) / (tp + tn + fp + fn)
             
-            st.markdown(f"#### Metrics at Threshold {th_select:.2f}")
-            st.markdown(f"- **Precision (Positive Predictive Value)**: {prec*100:.2f}%")
-            st.markdown(f"- **Recall (Sensitivity)**: {rec*100:.2f}%")
-            st.markdown(f"- **F1-Score**: {f1*100:.2f}%")
-            st.markdown(f"- **Accuracy**: {acc*100:.2f}%")
+            st.write(f"**Metrics at Threshold {th_select:.2f}:**")
+            st.write(f"* **Precision**: {prec*100:.2f}%")
+            st.write(f"* **Recall (Sensitivity)**: {rec*100:.2f}%")
+            st.write(f"* **F1-Score**: {f1*100:.2f}%")
+            st.write(f"* **Accuracy**: {acc*100:.2f}%")
             
+    st.info("The stacking ensemble F1-optimal threshold stands at 0.85, matching precision and recall scores. Lowering the threshold to 0.47 yields 90.2% recall, capturing a wider share of potential fraud at the cost of higher auditing overhead.")
+
+    st.divider()
+    
+    st.subheader("About This Model")
     st.markdown("""
-    <div class="insight-box">
-      <strong>Threshold Trade-off Insight:</strong> A high threshold (e.g. 0.85) maximizes Precision, meaning flagged cases are highly likely to be fraud. A lower threshold (e.g. 0.47) maximizes Recall, capturing 90.2% of actual fraud cases, which is optimal when False Negatives are expensive.
-    </div>
-    """, unsafe_allow_html=True)
+    * **Model Architecture**: Stacking Ensemble Classifier
+    * **Base Models**: XGBoost, LightGBM, CatBoost
+    * **Meta-Classifier**: Logistic Regression
+    * **Evaluation Protocol**: 5-Fold Stratified Cross-Validation & 10% Unseen Holdout Validation
+    * **Threshold Selection**: Optimized using F1 Score (0.8465) and F2 Score (0.4705)
+    """)
 
 elif page == "Predictions":
-    st.markdown('<div class="section-hdr">Batch Predictions Overview</div>', unsafe_allow_html=True)
+    st.title("Predictions")
+    st.write("Which providers should be investigated first?")
+    
+    st.divider()
     
     if submission is not None:
         flagged = (submission["Predicted_Class"] == "Yes").sum()
         total = len(submission)
         avg_risk = submission["Probability"].mean()
         
+        # Native Streamlit metrics blocks
         c_p1, c_p2, c_p3, c_p4 = st.columns(4)
-        c_p1.markdown(f"<div class='kpi-card'><div class='kpi-val'>{total:,}</div><div class='kpi-lbl'>Total Test Providers</div></div>", unsafe_allow_html=True)
-        c_p2.markdown(f"<div class='kpi-card'><div class='kpi-val'>{flagged:,}</div><div class='kpi-lbl'>Flagged Providers</div></div>", unsafe_allow_html=True)
-        c_p3.markdown(f"<div class='kpi-card'><div class='kpi-val'>{flagged/total*100:.2f}%</div><div class='kpi-lbl'>Test Fraud Rate</div></div>", unsafe_allow_html=True)
-        c_p4.markdown(f"<div class='kpi-card'><div class='kpi-val'>{avg_risk:.4f}</div><div class='kpi-lbl'>Average Risk Score</div></div>", unsafe_allow_html=True)
+        c_p1.metric("Total Test Providers", f"{total:,}")
+        c_p2.metric("Flagged Providers", f"{flagged:,}")
+        c_p3.metric("Test Fraud Rate", f"{flagged/total*100:.2f}%")
+        c_p4.metric("Average Risk Score", f"{avg_risk:.4f}")
         
         c_sh1, c_sh2 = st.columns([1.1, 1])
         with c_sh1:
-            st.markdown("##### Test Risk Score Probability Distribution")
-            fig = px.histogram(submission, x="Probability", nbins=50, color_discrete_sequence=[COLOR_PRIMARY])
-            fig.update_layout(**PLOTLY_LAYOUT, height=220)
+            st.subheader("Test Set Risk Probability Distribution")
+            fig = px.histogram(submission, x="Probability", nbins=50, color_discrete_sequence=["#1f4e79"])
+            plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+            plotly_layout_cfg.update(height=220, xaxis_title="Calculated Probability", yaxis_title="Provider Count")
+            fig.update_layout(**plotly_layout_cfg)
             st.plotly_chart(fig, use_container_width=True)
         with c_sh2:
-            st.markdown("##### Predicted Label Share")
+            st.subheader("Predicted Label Distribution")
             fig = go.Figure(go.Pie(
                 labels=["Legit", "Flagged"],
                 values=[total - flagged, flagged],
                 hole=0.5,
                 marker=dict(colors=[COLOR_LEGIT, COLOR_FRAUD])
             ))
-            fig.update_layout(**PLOTLY_LAYOUT, height=220)
+            plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+            plotly_layout_cfg.update(height=220)
+            fig.update_layout(**plotly_layout_cfg)
             st.plotly_chart(fig, use_container_width=True)
             
-        st.markdown("##### Scored Test Providers List")
+        st.subheader("Test Set Provider Predictions")
         st.dataframe(submission.sort_values("Probability", ascending=False), use_container_width=True)
         
         sub_csv = submission.to_csv(index=False).encode('utf-8')
-        st.download_button("Download Complete Submission File", sub_csv, "Tharun Kumar V_Submission.csv", "text/csv")
+        st.download_button("Download Complete Predictions (CSV)", sub_csv, "Tharun Kumar V_Submission.csv", "text/csv")
 
-    st.markdown('<div class="section-hdr">Provider Search & Deep Risk Assessment</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("Individual Provider Risk Assessment")
     
     if submission is not None:
         p_list = submission["Provider"].tolist()
-        sel_prov = st.selectbox("Search & Select Provider ID", p_list)
+        sel_prov = st.selectbox("Select Provider ID to Inspect", p_list)
         
         if sel_prov:
             prov_row = submission[submission["Provider"] == sel_prov].iloc[0]
             score = prov_row["Probability"]
             
-            st.markdown("---")
             c_flow1, c_flow2 = st.columns([1, 1.2])
             
             with c_flow1:
-                st.markdown(f"#### Provider: {sel_prov}")
-                st.markdown(f"#### Risk Score: **{score*100:.2f}%**")
+                st.write(f"**Selected Provider**: {sel_prov}")
+                st.write(f"**Model Risk Probability**: {score*100:.2f}%")
                 
+                # Use native Streamlit status message boxes to represent operational risk tiers
                 if score >= 0.8465:
-                    st.markdown("<span class='badge-critical'>CRITICAL RISK</span>", unsafe_allow_html=True)
-                    rec_act = "IMMEDIATE PAYMENT SUSPENSION & SIU REFERRAL: Suspend active claims processing and refer provider to the Special Investigations Unit (SIU) for deep audit."
+                    st.error("Operational Risk Tier: High Risk")
+                    rec_act = "Action Required: Suspend payments immediately and refer the case to the Special Investigations Unit (SIU) for deep audit."
                 elif score >= 0.50:
-                    st.markdown("<span class='badge-high'>HIGH RISK</span>", unsafe_allow_html=True)
-                    rec_act = "PRE-PAYMENT MEDICAL RECORD AUDIT: Mandate submission of physical records for all claims. Review inpatient records before clearing payout."
-                elif score >= 0.30:
-                    st.markdown("<span class='badge-watch'>WATCH LIST</span>", unsafe_allow_html=True)
-                    rec_act = "BEHAVIORAL MONITORING: Monitor claims monthly. Track attending physician concentrations and diagnostic diversity ratios."
+                    st.warning("Operational Risk Tier: Medium Risk")
+                    rec_act = "Action Required: Put provider on pre-payment review. Require medical record submissions for inpatient claims."
                 else:
-                    st.markdown("<span class='badge-low'>LOW RISK</span>", unsafe_allow_html=True)
-                    rec_act = "STANDARD PROCESSING: Clear provider for baseline automated claims processing. Continue normal oversight."
+                    st.success("Operational Risk Tier: Low Risk")
+                    rec_act = "Action Required: Normal processing. Keep provider on baseline monitoring."
                 
-                st.markdown("<br><strong>Recommended Directive:</strong>", unsafe_allow_html=True)
                 st.info(rec_act)
                 
             with c_flow2:
-                st.markdown("#### Top Risk Drivers")
+                st.write("**Provider Metric Ratios vs Peer Median**")
                 
+                # Retrieve features from test summary or training summary
                 features_source = None
                 if test_provider_eda is not None and sel_prov in test_provider_eda["Provider"].values:
                     features_source = test_provider_eda[test_provider_eda["Provider"] == sel_prov].iloc[0]
@@ -650,25 +547,28 @@ elif page == "Predictions":
                     claims_ratio = prov_claims / 27.0
                     stay_ratio = prov_stay / 19.4
                     
-                    st.markdown(f"1. **Reimbursement Level**: Provider claimed **${prov_reimb:,.2f}** which is **{reimb_ratio:.1f}x** the peer median ($15,055).")
-                    st.markdown(f"2. **Claim Volume**: Provider submitted **{prov_claims:.0f}** claims which is **{claims_ratio:.1f}x** the peer median (27.0 claims).")
-                    st.markdown(f"3. **Inpatient Hospitalization**: Provider billed for **{prov_stay:.1f}** bed days which is **{stay_ratio:.1f}x** the peer mean (19.4 days).")
-                    st.markdown(f"4. **Diagnosis Code Count**: Provider maxed out diagnoses at **{prov_diag:.1f}** codes per claim.")
+                    st.write(f"1. **Reimbursements**: Billed **${prov_reimb:,.2f}** (**{reimb_ratio:.1f}x** peer median).")
+                    st.write(f"2. **Claims Count**: Submitted **{prov_claims:.0f}** claims (**{claims_ratio:.1f}x** peer median).")
+                    st.write(f"3. **Inpatient stay**: Recorded **{prov_stay:.1f}** bed days (**{stay_ratio:.1f}x** peer mean).")
+                    st.write(f"4. **Max Diagnoses count**: Recorded **{prov_diag:.1f}** diagnoses per claim.")
                     
                     fig = go.Figure()
                     fig.add_trace(go.Bar(
-                        x=["Reimbursement", "Claims Count", "Hospital Days"],
+                        x=["Reimbursements", "Claims Count", "Hospital Days"],
                         y=[reimb_ratio, claims_ratio, stay_ratio],
-                        marker_color="rgba(37, 99, 235, 0.8)"
+                        marker_color="#1f4e79"
                     ))
-                    fig.update_layout(**PLOTLY_LAYOUT, height=180, title="Provider Metric Ratios vs Peer Median")
+                    plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+                    plotly_layout_cfg.update(height=160)
+                    fig.update_layout(**plotly_layout_cfg)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
-                    st.write("Provider metrics details not found in summary datasets.")
+                    st.write("Feature statistics for the selected provider are not available.")
 
-    st.markdown('<div class="section-hdr">Batch File Upload Scoring</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("Batch File Scoring Engine")
     
-    up_file = st.file_uploader("Upload New Provider Claims CSV", type="csv")
+    up_file = st.file_uploader("Upload Claims CSV for Batch Scoring", type="csv")
     if up_file is not None:
         try:
             up_df = pd.read_csv(up_file)
@@ -685,43 +585,45 @@ elif page == "Predictions":
                     else:
                         preds_df["Risk_Score"] = np.random.uniform(0.01, 0.95, len(preds_df)).round(4)
                         preds_df["Predicted_Class"] = np.where(preds_df["Risk_Score"] >= 0.8465, "Yes", "No")
-                        st.warning("Input CSV doesn't match pipeline columns. Generating simulated probabilities.")
+                        st.warning("Input CSV columns do not match model features. Generating simulated risk scores.")
                 else:
                     preds_df["Risk_Score"] = np.random.uniform(0.01, 0.95, len(preds_df)).round(4)
                     preds_df["Predicted_Class"] = np.where(preds_df["Risk_Score"] >= 0.8465, "Yes", "No")
                 st.dataframe(preds_df, use_container_width=True)
                 csv_out = preds_df.to_csv(index=False).encode('utf-8')
-                st.download_button("Download Predictions Report", csv_out, "uploaded_predictions.csv", "text/csv")
+                st.download_button("Download Batch Predictions (CSV)", csv_out, "uploaded_predictions.csv", "text/csv")
             else:
                 st.error("Uploaded CSV must contain a 'Provider' column.")
         except Exception as e:
             st.error(f"Error parsing file: {e}")
 
 elif page == "Business Impact":
-    st.markdown('<div class="section-hdr">Optimal Threshold & Financial ROI Framework</div>', unsafe_allow_html=True)
+    st.title("Business Impact")
+    st.write("What financial value does this model create?")
     
-    st.write("""
-    Setting the auditing threshold is an economic trade-off. Correctly auditing fraudulent providers recovers lost funds (benefit), while auditing legitimate providers incurs administrative cost (expense).
+    st.divider()
     
-    This simulation calculates the financial return on investment (ROI) based on your team's investigation capacity.
-    """)
+    audit_cap = st.slider("Investigator Audit Capacity (Number of Providers)", 1, 200, 50)
     
-    audit_cap = st.slider("Audit Capacity (Number of Providers to Audit)", 1, 200, 50)
-    
+    # Financial metrics based on top sorted test risk predictions
     if submission is not None:
         sorted_sub = submission.sort_values("Probability", ascending=False).reset_index(drop=True)
         top_audits = sorted_sub.head(audit_cap)
         
+        # Calculate expected fraud cases using the sum of estimated probabilities
         expected_fraud_cases = top_audits["Probability"].sum()
+        # Assume an average financial recovery exposure of $220,000 per fraud provider and a 70% audit recovery rate
         est_recovery_value = expected_fraud_cases * 220000.0 * 0.70
+        # Assume an investigation auditing cost of $2,500 per provider
         total_audit_cost = audit_cap * 2500.0
         net_savings = est_recovery_value - total_audit_cost
         
+        # Native metrics layout
         c_i1, c_i2, c_i3, c_i4 = st.columns(4)
-        c_i1.markdown(f"<div class='kpi-card'><div class='kpi-val'>{expected_fraud_cases:.1f}</div><div class='kpi-lbl'>Expected Fraud Cases Caught</div></div>", unsafe_allow_html=True)
-        c_i2.markdown(f"<div class='kpi-card'><div class='kpi-val'>${est_recovery_value:,.2f}</div><div class='kpi-lbl'>Potential Recovery Value</div></div>", unsafe_allow_html=True)
-        c_i3.markdown(f"<div class='kpi-card'><div class='kpi-val'>${total_audit_cost:,.2f}</div><div class='kpi-lbl'>Total Audit Cost</div></div>", unsafe_allow_html=True)
-        c_i4.markdown(f"<div class='kpi-card'><div class='kpi-val'>${net_savings:,.2f}</div><div class='kpi-lbl'>Net Savings (ROI)</div></div>", unsafe_allow_html=True)
+        c_i1.metric("Expected Fraud Cases Caught", f"{expected_fraud_cases:.1f}")
+        c_i2.metric("Potential Recovery Value", f"${est_recovery_value:,.2f}")
+        c_i3.metric("Total Audit Cost", f"${total_audit_cost:,.2f}")
+        c_i4.metric("Net Savings (ROI)", f"${net_savings:,.2f}")
         
         capacities = list(range(1, 201))
         cumulative_recovered = []
@@ -738,10 +640,11 @@ elif page == "Business Impact":
             cumulative_savings.append(rec - cost)
             
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=capacities, y=cumulative_recovered, name="Recovery Value ($)", line=dict(color=COLOR_LEGIT, width=2.5)))
-        fig.add_trace(go.Scatter(x=capacities, y=cumulative_costs, name="Investigation Cost ($)", line=dict(color=COLOR_FRAUD, width=2)))
-        fig.add_trace(go.Scatter(x=capacities, y=cumulative_savings, name="Net Savings ($)", line=dict(color=COLOR_ACCENT, width=3)))
+        fig.add_trace(go.Scatter(x=capacities, y=cumulative_recovered, name="Recovery Value ($)", line=dict(color="#16a34a", width=2)))
+        fig.add_trace(go.Scatter(x=capacities, y=cumulative_costs, name="Investigation Cost ($)", line=dict(color="#dc2626", width=1.5)))
+        fig.add_trace(go.Scatter(x=capacities, y=cumulative_savings, name="Net Savings ($)", line=dict(color="#2563eb", width=2.5)))
         
+        # Mark optimal auditing N cases
         max_idx = int(np.argmax(cumulative_savings))
         optimal_cap = capacities[max_idx]
         optimal_savings = cumulative_savings[max_idx]
@@ -749,25 +652,19 @@ elif page == "Business Impact":
         
         fig.add_annotation(
             x=optimal_cap, y=optimal_savings,
-            text=f"Optimal Audit: {optimal_cap} cases<br>Net: ${optimal_savings:,.2f}<br>Thresh: {optimal_threshold_prob:.3f}",
-            showarrow=True, arrowhead=1, ax=-60, ay=-60,
-            font=dict(color="#f8fafc", size=10),
-            bgcolor="#1f4e79", bordercolor="#2563eb", borderwidth=1, borderpad=4
+            text=f"Optimal Audit: {optimal_cap} cases<br>Net Savings: ${optimal_savings:,.2f}<br>Prob Threshold: {optimal_threshold_prob:.3f}",
+            showarrow=True, arrowhead=1, ax=-60, ay=-60
         )
         
-        fig.update_layout(**PLOTLY_LAYOUT, height=350, title="Cumulative ROI Curves & Optimal Audit Frontier",
+        plotly_layout_cfg = PLOTLY_LAYOUT.copy()
+        plotly_layout_cfg.update(height=320, title="Cumulative ROI Curves & Optimal Audit Frontier",
                           xaxis_title="Number of Providers Audited", yaxis_title="USD ($)",
-                          legend=dict(orientation="h", y=-0.15, x=0.15))
+                          legend=dict(orientation="h", y=-0.2, x=0.15))
+        fig.update_layout(**plotly_layout_cfg)
         st.plotly_chart(fig, use_container_width=True)
         
-        st.markdown(f"""
-        <div class="insight-box">
-          <strong>Optimal frontier Recommendation:</strong> To maximize financial recovery, the optimal number of audits is <strong>{optimal_cap} providers</strong>, which corresponds to an operational threshold probability of <strong>{optimal_threshold_prob:.3f}</strong>. Auditing beyond this point yields diminishing returns as investigation costs outpace fraud recoveries.
-        </div>
-        """, unsafe_allow_html=True)
-        
-st.markdown("""
-<div style="text-align: center; margin-top: 2rem; padding: 1rem; border-top: 1px solid #334155; font-size: 0.85rem; color: #94a3b8;">
-  Healthcare Provider Fraud Detection Platform &nbsp;|&nbsp; Model: Stacking Ensemble &nbsp;|&nbsp; ROC-AUC: 0.9579 &nbsp;|&nbsp; Prepared By: Tharun Kumar V
-</div>
-""", unsafe_allow_html=True)
+        st.info(f"Auditing resources should target the highest-risk providers. The optimal audit capacity is {optimal_cap} providers (corresponding to a threshold probability of {optimal_threshold_prob:.3f}) yielding peak net savings of ${optimal_savings:,.2f}. Beyond this threshold, investigation costs exceed recovered billings.")
+
+# Render simplified professional footer
+st.divider()
+st.caption("Healthcare Provider Fraud Detection | Model: Stacking Ensemble | Validation: 5-Fold CV + Holdout")
