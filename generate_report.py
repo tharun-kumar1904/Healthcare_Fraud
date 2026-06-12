@@ -246,13 +246,13 @@ add_paragraph(
     "Healthcare fraud, waste, and abuse (FWA) represent a significant financial challenge that escalates insurance premiums and drains public healthcare funds. "
     "Traditional detection methods rely on deterministic, rule-based systems that fail to detect coordinated schemes, billing rings, and patient-upcoding behaviors. "
     "This report presents a machine learning pipeline developed to identify potentially fraudulent healthcare providers. "
-    "By merging and aggregating beneficiary profiles, outpatient billings, and inpatient medical stays, we constructed 57 provider-level behavioral features."
+    "By merging and aggregating beneficiary profiles, outpatient billings, and inpatient medical stays, I constructed 57 provider-level behavioral features."
 )
 
 add_paragraph(
-    "Through statistical screening and feature selection, we isolated the top 35 signature features. "
-    "Our model architecture features a Stacking Ensemble Classifier comprising XGBoost, LightGBM DART, and CatBoost as base estimators, blended using an Logistic Regression meta-classifier. "
-    "To handle target class imbalance (9.7:1 ratio), we leveraged native model class weights during training rather than synthetic oversampling, preserving natural decision boundaries."
+    "Through statistical screening and feature selection, I isolated the top 35 signature features. "
+    "My model architecture features a Stacking Ensemble Classifier comprising XGBoost, LightGBM DART, and CatBoost as base estimators, blended using a Logistic Regression meta-classifier. "
+    "To handle target class imbalance (9.7:1 ratio), I leveraged native model class weights during training rather than synthetic oversampling, preserving natural decision boundaries."
 )
 
 add_paragraph(
@@ -262,8 +262,8 @@ add_paragraph(
 )
 
 add_paragraph(
-    "Integrated directly into a Streamlit analytics application, this model provides real-time provider risk scoring, interactive peer comparison, SHAP feature attribution, and a investigator capacity planning framework. "
-    "Our ROI analysis shows that prioritizing cases using the model's risk scores yields an optimal investigation point at 62 provider audits, generating a peak net savings of over $1.88M per inspection cohort and saving administrative hours."
+    "Integrated directly into a Streamlit analytics application, this model provides real-time provider risk scoring, interactive peer comparison, SHAP feature attribution, and an investigator capacity planning framework. "
+    "My ROI analysis shows that prioritizing cases using the model's risk scores yields an optimal investigation point at 62 provider audits, generating a peak net savings of over $1.88M per inspection cohort and saving administrative hours."
 )
 
 doc.add_page_break()
@@ -348,8 +348,8 @@ add_paragraph(
 )
 
 add_paragraph(
-    "To counteract these billing networks, we must aggregate individual beneficiary claims up to the provider level, enabling the identification of systematic behavioral anomalies. "
-    "Common fraud patterns targeted by our machine learning features include:"
+    "To counteract these billing networks, it is necessary to aggregate individual beneficiary claims up to the provider level, enabling the identification of systematic behavioral anomalies. "
+    "Common fraud patterns targeted by my machine learning features include:"
 )
 add_paragraph("Billing for services, procedures, or medical supplies that were never actually provided to patients.", bold_prefix="• Services Not Rendered: ")
 add_paragraph("Submitting identical claim details (same procedure codes, dates, and patient IDs) multiple times to bypass payment limits.", bold_prefix="• Duplicate Claims: ")
@@ -381,7 +381,7 @@ add_paragraph(
 
 add_heading("Pipeline Architecture & Data Flow", level=2)
 add_paragraph(
-    "Below is the architectural representation of our data processing, feature selection, model prediction, and investigation prioritization pipeline:"
+    "Below is the architectural representation of the data processing, feature selection, model prediction, and investigation prioritization pipeline:"
 )
 
 diagram_text = (
@@ -432,14 +432,14 @@ doc.add_page_break()
 add_heading("6. Data Preparation & Preprocessing", level=1)
 add_paragraph(
     "Data preprocessing is critical to clean raw claims variables and translate them into robust machine learning inputs. "
-    "Our data cleaning and integration workflow involves several key stages:"
+    "The data cleaning and integration workflow involves several key stages:"
 )
 
 add_paragraph("Null entries in physical code fields (e.g. diagnosis/procedure codes) indicate no procedure was performed. These are imputed with a placeholder 'None'. Missing attending, operating, and other physician IDs are filled with an 'Unknown' category to prevent losing records during merge operations. Null discharge dates on outpatient entries are filled with the corresponding claim start date.", bold_prefix="• Missing Value Resolution: ")
 add_paragraph("Duplicate claims (defined as identical provider, beneficiary, date, and reimbursement values) are identified. These duplicates represent administrative processing errors or repeat billing attempts and are logged and removed.", bold_prefix="• Deduplication: ")
 add_paragraph("Claim start and end dates are converted to datetime objects to calculate claim duration. Dates of birth are mapped to beneficiary ages, and chronic condition indicators are converted from 1/2 binary codes into standard 0/1 indicator flags.", bold_prefix="• Data Transformation: ")
 add_paragraph("All clean claims are merged with beneficiary tables and aggregated by Provider ID. We extract medians, averages, standard deviations, and ratios across claims, patient profiles, and medical costs.", bold_prefix="• Provider Aggregation: ")
-add_paragraph("Our historical target data has a significant class imbalance (9.7:1 legitimate-to-fraud ratio). Instead of using synthetic oversampling (SMOTE), which can create unrealistic combinations of aggregated features, we utilized native model class weights during XGBoost, LightGBM, and CatBoost training. This maintains the physical bounds of our engineered metrics.", bold_prefix="• Native Class Imbalance Handling: ")
+add_paragraph("The historical target data has a significant class imbalance (9.7:1 legitimate-to-fraud ratio). Instead of using synthetic oversampling (SMOTE), which can create unrealistic combinations of aggregated features, I utilized native model class weights during XGBoost, LightGBM, and CatBoost training. This maintains the physical bounds of the engineered metrics.", bold_prefix="• Native Class Imbalance Handling: ")
 
 doc.add_page_break()
 
@@ -448,7 +448,7 @@ doc.add_page_break()
 # ==========================================
 add_heading("7. Exploratory Data Analysis (EDA)", level=1)
 add_paragraph(
-    "Our exploratory data analysis reveals strong, systematic differences in billing volumes, medical stay durations, and reimbursement distributions between legitimate and fraudulent providers. "
+    "My exploratory data analysis reveals strong, systematic differences in billing volumes, medical stay durations, and reimbursement distributions between legitimate and fraudulent providers. "
     "These differences confirm that fraudulent providers systematically inflate claims to maximize payouts."
 )
 
@@ -483,7 +483,7 @@ doc.add_page_break()
 # ==========================================
 add_heading("8. Feature Engineering", level=1)
 add_paragraph(
-    "To capture these complex billing patterns, we engineered 57 provider-level features across financial, volume, clinical, behavioral, and temporal categories. "
+    "To capture these complex billing patterns, I engineered 57 provider-level features across financial, volume, clinical, behavioral, and temporal categories. "
     "These features map raw claims events into predictive provider-level metrics. "
     "The primary feature categories include:"
 )
@@ -502,24 +502,24 @@ doc.add_page_break()
 # ==========================================
 add_heading("9. Model Development & Stacking Architecture", level=1)
 add_paragraph(
-    "To build a robust fraud detection system, we evaluated several machine learning models: Logistic Regression, Random Forest (300 estimators), XGBoost (Optuna-tuned), LightGBM, and CatBoost. "
-    "Our final architecture utilizes a Stacking Ensemble Classifier to combine the strengths of our base models."
+    "To build a robust fraud detection system, I evaluated several machine learning models: Logistic Regression, Random Forest (300 estimators), XGBoost (Optuna-tuned), LightGBM, and CatBoost. "
+    "The final architecture utilizes a Stacking Ensemble Classifier to combine the strengths of the base models."
 )
 
 add_heading("Why Stacking Ensemble Was Selected", level=2)
 add_paragraph(
     "Independent models display distinct biases: XGBoost excels at detecting financial outliers, LightGBM is highly responsive to volume features, and CatBoost efficiently processes categorical representations. "
-    "By training a Logistic Regression meta-classifier on the probability outputs of these base models, we correct individual classifier biases. "
+    "By training a Logistic Regression meta-classifier on the probability outputs of these base models, the framework corrects individual classifier biases. "
     "This meta-classifier acts as a regularized blender, producing a highly generalizable model that achieves the highest overall ROC-AUC and the best balance of precision and recall."
 )
 
 add_heading("Cross-Validation & Hyperparameter Optimization", level=2)
 add_paragraph(
-    "To protect against target leakage, we implemented a 5-fold Stratified Cross-Validation protocol. "
+    "To protect against target leakage, I implemented a 5-fold Stratified Cross-Validation protocol. "
     "Hyperparameters for XGBoost, LightGBM, and CatBoost were optimized using Optuna over 100 trials, maximizing the cross-validated F1-score."
 )
 add_paragraph(
-    "To handle class imbalance, we configured native class weights (`scale_pos_weight` in XGBoost/LightGBM and `auto_class_weights` in CatBoost) proportional to the 9.7:1 target class ratio, avoiding the noise introduced by SMOTE."
+    "To handle class imbalance, I configured native class weights (`scale_pos_weight` in XGBoost/LightGBM and `auto_class_weights` in CatBoost) proportional to the 9.7:1 target class ratio, avoiding the noise introduced by SMOTE."
 )
 
 doc.add_page_break()
@@ -592,7 +592,7 @@ doc.add_page_break()
 # ==========================================
 add_heading("12. Fraud Insights & SHAP Feature Attribution", level=1)
 add_paragraph(
-    "To explain model predictions, we calculated SHAP (SHapley Additive exPlanations) values to capture global feature importances. "
+    "To explain model predictions, I calculated SHAP (SHapley Additive exPlanations) values to capture global feature importances. "
     "This analysis reveals the key drivers of provider fraud risk:"
 )
 
@@ -619,8 +619,8 @@ add_paragraph(
 add_heading("Investigation Prioritization & ROI Framework", level=2)
 add_paragraph(
     "Traditional auditing reviews cases randomly or chronologically, resulting in low recovery rates. "
-    "By sorting providers by the model's risk scores, we construct an optimal audit frontier. "
-    "Our ROI analysis assumes standard operational parameters: an average audit cost of $2,500 per provider, a median recovery value of $220,000 per fraud case, and a 70% audit recovery success rate."
+    "By sorting providers by the model's risk scores, the framework constructs an optimal audit frontier. "
+    "My ROI analysis assumes standard operational parameters: an average audit cost of $2,500 per provider, a median recovery value of $220,000 per fraud case, and a 70% audit recovery success rate."
 )
 
 roi_headers = ["Audit Capacity", "Expected Fraud Cases", "Cumulative Audit Cost", "Potential Recovery", "Net Savings (ROI)"]
@@ -647,12 +647,12 @@ doc.add_page_break()
 # ==========================================
 add_heading("14. Practical Deployment Strategy", level=1)
 add_paragraph(
-    "To integrate the stacking classifier into daily operations at a health insurance firm, we propose a five-stage deployment roadmap:"
+    "To integrate the stacking classifier into daily operations at a health insurance firm, I propose a five-stage deployment roadmap:"
 )
 
 add_paragraph("The scoring engine runs monthly, ingesting the latest cycle of inpatient and outpatient claims. It outputs risk probabilities for all active billing providers.", bold_prefix="1. Monthly Batch Scoring: ")
 add_paragraph("Providers are ranked by their risk scores. High-probability outliers are queued for the Special Investigations Unit (SIU), replacing manual case picking with a prioritized audit pipeline.", bold_prefix="2. Risk-Based Priority Queueing: ")
-add_paragraph("We define action thresholds based on risk tiers: High Risk (>=0.85) triggers immediate payment holds and comprehensive audit requests; Medium Risk (0.50-0.84) triggers pre-payment medical record reviews; Low Risk (<0.50) is logged for standard monitoring.", bold_prefix="3. Tiered Operational Action Directives: ")
+add_paragraph("I define action thresholds based on risk tiers: High Risk (>=0.85) triggers immediate payment holds and comprehensive audit requests; Medium Risk (0.50-0.84) triggers pre-payment medical record reviews; Low Risk (<0.50) is logged for standard monitoring.", bold_prefix="3. Tiered Operational Action Directives: ")
 add_paragraph("Audit results (fraud confirmed vs. false positives) are logged. These validated outcomes are fed back into the training data, forming a feedback loop to improve future scoring runs.", bold_prefix="4. Closed-Loop Review Feedback: ")
 add_paragraph("To protect against model drift, the pipeline automatically retrains the stacking classifier quarterly, integrating fresh labels and updating base model weights.", bold_prefix="5. Scheduled Model Retraining: ")
 
@@ -663,7 +663,7 @@ doc.add_page_break()
 # ==========================================
 add_heading("15. Streamlit Application & Dashboard Layout", level=1)
 add_paragraph(
-    "We deployed our machine learning pipeline into a professional, enterprise-grade Streamlit application. "
+    "I deployed the machine learning pipeline into a professional, enterprise-grade Streamlit application. "
     "The application contains 6 primary pages to support clinical and financial fraud audits:"
 )
 
@@ -778,7 +778,7 @@ add_paragraph(
 )
 
 add_paragraph(
-    "For deployment and integration, we recommend the following next steps:"
+    "For deployment and integration, I recommend the following next steps:"
 )
 add_paragraph("Configure the Streamlit dashboard to score incoming claims batches monthly, flagging high-risk providers for pre-payment review.", bold_prefix="• Batch Scoring Integration: ")
 add_paragraph("For routine audits, utilize the F1-optimal threshold (0.85). For comprehensive screening campaigns, utilize the F2-optimal threshold (0.47) to capture 9 out of 10 potential fraud cases.", bold_prefix="• Dynamic Threshold Strategy: ")
