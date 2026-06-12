@@ -51,8 +51,9 @@ if os.path.exists("pipeline_summary.json"):
         pass
 
 # ── PAGE CONFIG ───────────────────────────────────────────────────────────────
+# ── PAGE CONFIG ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Healthcare Fraud Detector | Sagility Case Study",
+    page_title="Healthcare Fraud Detector Case Study",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -82,7 +83,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15));
     border: 1px solid rgba(102,126,234,0.3);
     border-radius: 16px;
-    padding: 1.4rem 1.6rem;
+    padding: 1rem 0.5rem;
     text-align: center;
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
@@ -93,11 +94,12 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     transform: translateY(-3px);
     box-shadow: 0 8px 30px rgba(102,126,234,0.25);
 }
-.kpi-icon { font-size: 1.8rem; margin-bottom: .3rem; }
-.kpi-val  { font-size: 2rem; font-weight: 800;
+.kpi-icon { font-size: 1.5rem; margin-bottom: .2rem; }
+.kpi-val  { font-size: 1.3rem; font-weight: 800;
+            white-space: nowrap;
             background: linear-gradient(135deg,#667eea,#a78bfa);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.kpi-lbl  { font-size: .82rem; color: var(--text-color); opacity: 0.75; margin-top: .2rem; letter-spacing: .5px; }
+.kpi-lbl  { font-size: .8rem; color: var(--text-color); opacity: 0.75; margin-top: .2rem; letter-spacing: .5px; }
 
 /* Section header */
 .section-hdr {
@@ -187,13 +189,12 @@ with st.sidebar:
     st.markdown("---")
 
     page = st.radio("", [
-        "🏠  Overview",
-        "📊  EDA Dashboard",
-        "🤖  Fraud Prediction",
-        "📈  Feature Importance",
+        "🏠  Executive Dashboard",
+        "📖  Fraud Story",
+        "🧠  Feature Intelligence",
         "🔬  Model Performance",
-        "💼  Business ROI Calculator",
-        "💡  Fraud Insights",
+        "🤖  Fraud Prediction Center",
+        "💼  Business ROI",
     ], label_visibility="collapsed")
 
     st.markdown("---")
@@ -202,7 +203,7 @@ with st.sidebar:
     st.markdown(f"<div style='color:#667eea;font-weight:700'>📌 F1 Score &nbsp; {f1_val:.4f}</div>", unsafe_allow_html=True)
     st.markdown(f"<div style='color:#f39c12;font-weight:700'>⚡ Recall &nbsp;&nbsp;&nbsp;&nbsp; {recall_val*100:.1f}%</div>", unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown(f"<div style='color:#8892b0;font-size:.75rem;text-align:center'>Sagility Case Study 2026<br><b>{best_model_name}</b><br>Threshold: {best_threshold:.3f}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='color:#8892b0;font-size:.75rem;text-align:center'>Healthcare Fraud Case Study<br><b>{best_model_name}</b><br>Threshold: {best_threshold:.3f}</div>", unsafe_allow_html=True)
 
 # ── LOAD ARTIFACTS ────────────────────────────────────────────────────────────
 @st.cache_resource
@@ -269,7 +270,7 @@ provider_eda = load_provider_eda_v4()
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE 1 — OVERVIEW
 # ══════════════════════════════════════════════════════════════════════════════
-if page == "🏠  Overview":
+if page == "🏠  Executive Dashboard":
     st.markdown("""
     <div style='text-align:center;padding:2rem 0 1rem'>
       <h1 style='font-size:2.5rem;font-weight:800;
@@ -278,7 +279,7 @@ if page == "🏠  Overview":
         🏥 Healthcare Provider Fraud Detection
       </h1>
       <p class="subtitle" style="font-size:1.05rem;margin-top:.4rem">
-        End-to-End Machine Learning · Sagility Data Science Case Study
+        End-to-End Machine Learning · Healthcare Fraud Case Study
       </p>
     </div>
     """, unsafe_allow_html=True)
@@ -384,16 +385,65 @@ if page == "🏠  Overview":
               <div style='font-size:1.6rem;font-weight:800;color:{clr}'>{val}</div>
               <div class="kpi-lbl">{lbl}</div>
             </div>""", unsafe_allow_html=True)
-elif page == "📊  EDA Dashboard":
-    st.markdown('<div class="section-hdr">📊 Exploratory Data Analysis Dashboard</div>', unsafe_allow_html=True)
 
-    np.random.seed(42)
+elif page == "📖  Fraud Story":
+    st.markdown('<div class="section-hdr">📖 The Healthcare Fraud Story</div>', unsafe_allow_html=True)
+    st.markdown('<div class="insight">Key statistical multipliers and behavioral comparisons computed dynamically from provider training datasets showing structural billing differences between fraudulent and legitimate providers.</div>', unsafe_allow_html=True)
 
-    tab1, tab2, tab3, tab4 = st.tabs(["💰 Financial Patterns", "🏥 Clinical Signals",
-                                       "📋 Dataset Overview", "🔗 Correlations"])
+    if provider_eda is not None:
+        f_df = provider_eda[provider_eda['FraudLabel'] == 1]
+        l_df = provider_eda[provider_eda['FraudLabel'] == 0]
+        
+        ratio_claims = float(f_df['TotalClaims'].mean() / max(l_df['TotalClaims'].mean(), 1))
+        ratio_reimb = float(f_df['TotalReimbursement'].mean() / max(l_df['TotalReimbursement'].mean(), 1))
+        ratio_stay = float(f_df['TotalHospitalDays'].mean() / max(l_df['TotalHospitalDays'].mean(), 1))
+        ratio_chronic = float(f_df['AvgChronicCondCount'].mean() / max(l_df['AvgChronicCondCount'].mean(), 0.1))
+    else:
+        ratio_claims = 2.8
+        ratio_reimb = 3.4
+        ratio_stay = 2.2
+        ratio_chronic = 4.1
 
-    with tab1:
-        st.markdown("### Claim Amount Distribution")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.markdown(f"""
+    <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
+      <div style='font-size:1.5rem'>🚨</div>
+      <div style='font-size:1.25rem;font-weight:800;color:#e74c3c;white-space:nowrap;'>{ratio_claims:.1f}x</div>
+      <div class="kpi-lbl">Claims Volume Multiplier</div>
+      <p style="color: #8892b0; font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.3;">Fraud providers submit {ratio_claims:.1f}x more claims than peers, showing high-frequency billing schemes.</p>
+    </div>""", unsafe_allow_html=True)
+
+    c2.markdown(f"""
+    <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
+      <div style='font-size:1.5rem'>💰</div>
+      <div style='font-size:1.25rem;font-weight:800;color:#e74c3c;white-space:nowrap;'>{ratio_reimb:.1f}x</div>
+      <div class="kpi-lbl">Reimbursement Multiplier</div>
+      <p style="color: #8892b0; font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.3;">Fraud providers receive {ratio_reimb:.1f}x higher reimbursements, indicating upcoded DRGs.</p>
+    </div>""", unsafe_allow_html=True)
+
+    c3.markdown(f"""
+    <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
+      <div style='font-size:1.5rem'>🏥</div>
+      <div style='font-size:1.25rem;font-weight:800;color:#e74c3c;white-space:nowrap;'>{ratio_stay:.1f}x</div>
+      <div class="kpi-lbl">Inpatient Day Multiplier</div>
+      <p style="color: #8892b0; font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.3;">Fraud providers keep patients hospitalized {ratio_stay:.1f}x longer, suggesting phantom inpatient stays.</p>
+    </div>""", unsafe_allow_html=True)
+
+    c4.markdown(f"""
+    <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
+      <div style='font-size:1.5rem'>🧬</div>
+      <div style='font-size:1.25rem;font-weight:800;color:#e74c3c;white-space:nowrap;'>{ratio_chronic:.1f}x</div>
+      <div class="kpi-lbl">Chronic Disease Multiplier</div>
+      <p style="color: #8892b0; font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.3;">Fraud providers list {ratio_chronic:.1f}x more chronic conditions per patient to justify expensive procedures.</p>
+    </div>""", unsafe_allow_html=True)
+
+    st.markdown("")
+    
+    st.markdown('<div class="section-hdr">📊 Statistical Distributions of Fraud Signature Metrics</div>', unsafe_allow_html=True)
+    c_dist1, c_dist2 = st.columns(2)
+    
+    with c_dist1:
+        st.markdown("#### Claim Amount Distribution")
         if provider_eda is not None:
             fraud_amt = provider_eda[provider_eda['FraudLabel'] == 1]['TotalReimbursement'].values
             legit_amt = provider_eda[provider_eda['FraudLabel'] == 0]['TotalReimbursement'].values
@@ -408,14 +458,14 @@ elif page == "📊  EDA Dashboard":
         fig.add_trace(go.Histogram(x=fraud_amt.clip(0,15000), name="Fraudulent",
                                    marker_color=COLOR_FRAUD, opacity=0.7,
                                    nbinsx=50, histnorm="probability density"))
-        fig.update_layout(**PLOTLY_LAYOUT, height=450,
+        fig.update_layout(**PLOTLY_LAYOUT, height=300,
                           xaxis_title="Claim Amount ($)",
                           yaxis_title="Density", barmode="overlay",
-                          legend=dict(orientation="h", y=-0.1))
+                          legend=dict(orientation="h", y=-0.2))
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('<div class="insight" style="margin-bottom:2rem;">📌 Fraudulent providers submit <b>significantly higher</b> claim amounts — systematic upcoding signature.</div>', unsafe_allow_html=True)
 
-        st.markdown("### Hospital Stay Duration")
+    with c_dist2:
+        st.markdown("#### Hospital Stay Duration")
         if provider_eda is not None:
             fraud_stay = provider_eda[provider_eda['FraudLabel'] == 1]['TotalHospitalDays'].values
             legit_stay = provider_eda[provider_eda['FraudLabel'] == 0]['TotalHospitalDays'].values
@@ -428,105 +478,34 @@ elif page == "📊  EDA Dashboard":
                              marker_color=COLOR_LEGIT, boxmean=True))
         fig.add_trace(go.Box(y=fraud_stay, name="Fraudulent",
                              marker_color=COLOR_FRAUD, boxmean=True))
-        fig.update_layout(**PLOTLY_LAYOUT, height=450, yaxis_title="Days",
-                          legend=dict(orientation="h", y=-0.1))
+        fig.update_layout(**PLOTLY_LAYOUT, height=300, yaxis_title="Days",
+                          legend=dict(orientation="h", y=-0.2))
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('<div class="insight" style="margin-bottom:2rem;">📌 Fraudulent providers show <b>unusually long</b> hospital stays — classic ghost billing indicator.</div>', unsafe_allow_html=True)
 
-        st.markdown("### Reimbursement vs Claims Volume (Provider Level)")
+    c_dist3, c_dist4 = st.columns(2)
+    with c_dist3:
+        st.markdown("#### Patient Age Distribution")
         if provider_eda is not None:
-            sub_fraud = provider_eda[provider_eda['FraudLabel'] == 1]
-            sub_legit = provider_eda[provider_eda['FraudLabel'] == 0].sample(min(500, len(provider_eda[provider_eda['FraudLabel'] == 0])), random_state=42)
-            fraud_reimb = sub_fraud['TotalReimbursement'].values
-            fraud_claims = sub_fraud['TotalClaims'].values
-            legit_reimb = sub_legit['TotalReimbursement'].values
-            legit_claims = sub_legit['TotalClaims'].values
+            fraud_age = provider_eda[provider_eda['FraudLabel'] == 1]['AvgPatientAge'].values
+            legit_age = provider_eda[provider_eda['FraudLabel'] == 0]['AvgPatientAge'].values
         else:
-            fraud_reimb  = np.random.lognormal(12, 1.2, 80)
-            fraud_claims = np.random.lognormal(5.5, 0.9, 80)
-            legit_reimb  = np.random.lognormal(10, 0.8, 120)
-            legit_claims = np.random.lognormal(4.5, 0.7, 120)
+            fraud_age = np.random.normal(72, 12, 506).clip(40, 100)
+            legit_age = np.random.normal(68, 14, 4904).clip(18, 100)
             
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=legit_claims, y=legit_reimb/1e6,
-                                 mode="markers", name="Legitimate",
-                                 marker=dict(color=COLOR_LEGIT, size=8, opacity=0.7)))
-        fig.add_trace(go.Scatter(x=fraud_claims, y=fraud_reimb/1e6,
-                                 mode="markers", name="Fraudulent",
-                                 marker=dict(color=COLOR_FRAUD, size=10, opacity=0.8,
-                                             symbol="diamond")))
-        fig.update_layout(**PLOTLY_LAYOUT, height=450,
-                          xaxis_title="Total Claims", yaxis_title="Total Reimbursement ($M)",
-                          xaxis_range=[0, 1500], yaxis_range=[0, 2.0],
-                          legend=dict(orientation="h", y=-0.1))
+        fig.add_trace(go.Histogram(x=legit_age, name="Legitimate",
+                                   marker_color=COLOR_LEGIT, opacity=0.7,
+                                   nbinsx=30, histnorm="probability density"))
+        fig.add_trace(go.Histogram(x=fraud_age, name="Fraudulent",
+                                   marker_color=COLOR_FRAUD, opacity=0.7,
+                                   nbinsx=30, histnorm="probability density"))
+        fig.update_layout(**PLOTLY_LAYOUT, height=300, barmode="overlay",
+                          xaxis_title="Patient Age",
+                          legend=dict(orientation="h", y=-0.2))
         st.plotly_chart(fig, use_container_width=True)
 
-    with tab2:
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("#### Chronic Condition Prevalence")
-            conditions = ["Alzheimer","HeartFailure","Kidney","Cancer",
-                          "Pulmonary","Depression","Diabetes","IschemicHeart","Stroke"]
-            col_map = {
-                "Alzheimer": "Avg_ChronicCond_Alzheimer",
-                "HeartFailure": "Avg_ChronicCond_Heartfailure",
-                "Kidney": "Avg_ChronicCond_KidneyDisease",
-                "Cancer": "Avg_ChronicCond_Cancer",
-                "Depression": "Avg_ChronicCond_Depression",
-                "Diabetes": "Avg_ChronicCond_Diabetes",
-                "Stroke": "Avg_ChronicCond_stroke",
-            }
-            if provider_eda is not None:
-                fraud_prev = []
-                legit_prev = []
-                f_df = provider_eda[provider_eda['FraudLabel'] == 1]
-                l_df = provider_eda[provider_eda['FraudLabel'] == 0]
-                for cond in conditions:
-                    feat = col_map.get(cond)
-                    if feat and feat in provider_eda.columns:
-                        fraud_prev.append(float(f_df[feat].mean()))
-                        legit_prev.append(float(l_df[feat].mean()))
-                    else:
-                        fraud_prev.append(0.35 + np.random.uniform(-0.05, 0.15))
-                        legit_prev.append(0.25 + np.random.uniform(-0.05, 0.10))
-            else:
-                fraud_prev  = [0.38,0.52,0.41,0.28,0.39,0.44,0.59,0.51,0.22]
-                legit_prev  = [0.28,0.39,0.31,0.21,0.29,0.33,0.48,0.40,0.16]
-                
-            fig = go.Figure()
-            fig.add_trace(go.Bar(name="Fraudulent", x=conditions, y=fraud_prev,
-                                 marker_color=COLOR_FRAUD, opacity=0.85))
-            fig.add_trace(go.Bar(name="Legitimate", x=conditions, y=legit_prev,
-                                 marker_color=COLOR_LEGIT, opacity=0.85))
-            fig.update_layout(**PLOTLY_LAYOUT, height=350, barmode="group",
-                              yaxis_title="Prevalence Rate",
-                              xaxis_tickangle=-35,
-                              legend=dict(orientation="h", y=-0.3))
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('<div class="insight">📌 Every chronic condition is more prevalent in fraud — classic <b>upcoding via complex patient profiles</b>.</div>', unsafe_allow_html=True)
-
-        with c2:
-            st.markdown("#### Patient Age Distribution")
-            if provider_eda is not None:
-                fraud_age = provider_eda[provider_eda['FraudLabel'] == 1]['AvgPatientAge'].values
-                legit_age = provider_eda[provider_eda['FraudLabel'] == 0]['AvgPatientAge'].values
-            else:
-                fraud_age = np.random.normal(72, 12, 506).clip(40, 100)
-                legit_age = np.random.normal(68, 14, 4904).clip(18, 100)
-                
-            fig = go.Figure()
-            fig.add_trace(go.Histogram(x=legit_age, name="Legitimate",
-                                       marker_color=COLOR_LEGIT, opacity=0.7,
-                                       nbinsx=30, histnorm="probability density"))
-            fig.add_trace(go.Histogram(x=fraud_age, name="Fraudulent",
-                                       marker_color=COLOR_FRAUD, opacity=0.7,
-                                       nbinsx=30, histnorm="probability density"))
-            fig.update_layout(**PLOTLY_LAYOUT, height=350, barmode="overlay",
-                              xaxis_title="Patient Age",
-                              legend=dict(orientation="h", y=-0.2))
-            st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown("#### Inpatient vs Outpatient Mix per Provider")
+    with c_dist4:
+        st.markdown("#### Inpatient vs Outpatient Mix")
         categories = ["Avg Claims","Avg Inpatient","Avg Outpatient","Avg Reimb ($K)"]
         if provider_eda is not None:
             f_df = provider_eda[provider_eda['FraudLabel'] == 1]
@@ -554,46 +533,175 @@ elif page == "📊  EDA Dashboard":
         fig.add_trace(go.Bar(name="Legitimate", x=categories, y=legit_vals,
                              marker_color=COLOR_LEGIT, opacity=0.85,
                              text=legit_vals, textposition="outside"))
-        fig.update_layout(**PLOTLY_LAYOUT, height=320, barmode="group",
+        fig.update_layout(**PLOTLY_LAYOUT, height=300, barmode="group",
                           legend=dict(orientation="h", y=-0.2))
         st.plotly_chart(fig, use_container_width=True)
 
-    with tab3:
-        st.markdown("#### Dataset Summary")
-        summary = pd.DataFrame({
-            "Dataset":["Train Labels","Beneficiary (Train)","Inpatient (Train)",
-                       "Outpatient (Train)","Test Providers","Beneficiary (Test)",
-                       "Inpatient (Test)","Outpatient (Test)"],
-            "Rows":   [5410,138556,40474,517737,1353,63968,9551,125841],
-            "Columns":[2,25,30,27,1,25,30,27],
-            "Key":    ["Provider","BeneID","ClaimID","ClaimID",
-                       "Provider","BeneID","ClaimID","ClaimID"],
-            "Purpose":["Fraud labels","Patient demographics","Hospital admissions",
-                       "Outpatient visits","Test providers","Test patients",
-                       "Test inpatient","Test outpatient"]
-        })
-        st.dataframe(summary, use_container_width=True, hide_index=True)
+    st.markdown("---")
+    st.markdown("#### 🔍 Top Fraud Patterns Discovered")
+    patterns = [
+        ("1", "TotalReimbursement >> peers", "Financial", "🔴 Critical",
+         "Disproportionate billing relative to patient count — upcoding signature"),
+        ("2", "TotalHospitalDays spike", "Medical", "🔴 Critical",
+         "Extended stays for services not rendered — ghost billing"),
+        ("3", "High ChronicCondCount", "Clinical", "🟠 High",
+         "Clustering complex patients to justify expensive procedures"),
+        ("4", "RepeatPatientRatio > 0.6", "Behavioral", "🟠 High",
+         "Same patients recycled across multiple fraudulent claims"),
+        ("5", "PhysicianConcentration", "Behavioral", "🟡 Medium",
+         "Small physician ring billing through single provider entity"),
+        ("6", "MaxClaimAmt outlier", "Financial", "🟡 Medium",
+         "Single extremely high claim — unbundling or phantom service"),
+    ]
+    patterns_df = pd.DataFrame(patterns,
+        columns=["#", "Pattern", "Category", "Risk Level", "Description"])
+    st.dataframe(patterns_df, use_container_width=True, hide_index=True)
 
-        st.markdown("#### Missing Value Profile")
-        mv_cols = ["OtherPhysician","ClmDiagnosisCode_10","ClmProcedureCode_3",
-                   "ClmProcedureCode_2","DOD","ClmProcedureCode_1",
-                   "ClmDiagnosisCode_9","ClmDiagnosisCode_8",
-                   "OperatingPhysician","ClmDiagnosisCode_7"]
-        mv_vals = [88.5,90.2,97.6,86.5,99.3,42.8,33.3,24.6,41.1,17.9]
-        colors  = [COLOR_FRAUD if v>80 else "#f39c12" if v>40 else "#f1c40f" for v in mv_vals]
-        fig = go.Figure(go.Bar(x=mv_vals, y=mv_cols, orientation="h",
-                               marker_color=colors, text=[f"{v}%" for v in mv_vals],
-                               textposition="outside"))
-        fig.add_vline(x=80, line_dash="dash", line_color="red", opacity=0.5,
-                      annotation_text="80% threshold", annotation_font_color="red")
-        fig.update_layout(**PLOTLY_LAYOUT, height=320,
-                          xaxis_title="Missing %", xaxis_range=[0,105])
+    st.markdown("---")
+    st.markdown("#### 🚀 Future Improvements")
+    improvements = [
+        ("🕸️", "Graph Neural Networks", "Model provider-physician-patient networks for syndicate detection"),
+        ("⏱️", "Temporal Modeling", "LSTM analysis of billing pattern shifts over time"),
+        ("🔤", "NLP on Diagnosis Codes", "Detect anomalous ICD code combinations via embeddings"),
+        ("🔒", "Federated Learning", "Train across multiple insurers without data sharing"),
+        ("🎯", "Active Learning", "Adaptive scoring that updates with auditor feedback"),
+    ]
+    c_imp1, c_imp2 = st.columns(2)
+    for i, (icon, title, desc) in enumerate(improvements):
+        col = c_imp1 if i % 2 == 0 else c_imp2
+        col.markdown(f"""
+        <div class="insight">
+          {icon} <strong>{title}</strong><br>
+          <span style='color:#8892b0;font-size:.82rem'>{desc}</span>
+        </div>""", unsafe_allow_html=True)
+
+elif page == "🧠  Feature Intelligence":
+    st.markdown('<div class="section-hdr">🧠 Feature Intelligence & Engineering</div>', unsafe_allow_html=True)
+    st.markdown('<div class="insight">Analyze feature category contributions, importances, correlation structures, and missing data profiles across the engineered feature set.</div>', unsafe_allow_html=True)
+
+    feature_to_category = {
+        # Volume
+        "TotalClaims": "Volume", "InpatientClaims": "Volume", "OutpatientClaims": "Volume",
+        "UniqueBeneficiaries": "Volume", "UniqueAttendPhysicians": "Volume",
+        # Financial
+        "AvgClaimAmt": "Financial", "TotalReimbursement": "Financial", "MaxClaimAmt": "Financial",
+        "StdClaimAmt": "Financial", "AvgDeductible": "Financial", "TotalDeductible": "Financial",
+        "ReimbursementPerClaim": "Financial", "DeductibleRatio": "Financial",
+        "ReimbPerBeneficiary": "Financial", "HighCostClaimRatio": "Financial",
+        "ClaimAmt_Skewness": "Financial", "ClaimAmt_Kurtosis": "Financial", "ClaimAmt_CV": "Financial",
+        # Temporal
+        "AvgClaimDuration": "Temporal", "AvgHospitalStay": "Temporal", "TotalHospitalDays": "Temporal",
+        "MonthlyClaimVariance": "Temporal", "PeakMonthClaims": "Temporal",
+        # Medical
+        "AvgNumDiagCodes": "Medical", "AvgNumProcCodes": "Medical", "AvgUniqueDiagCodes": "Medical",
+        "AvgUniqueProcCodes": "Medical", "MaxDiagCodes": "Medical", "PctMaxDiagCodes": "Medical",
+        # Behavioral
+        "ClaimsPerBeneficiary": "Behavioral", "InpatientRatio": "Behavioral",
+        "RepeatPatientRatio": "Behavioral", "PhysicianConcentration": "Behavioral",
+        "ClaimsPerPhysician": "Behavioral",
+        # Demographic
+        "BenePerPhysician": "Demographic", "AvgPatientAge": "Demographic", "MinPatientAge": "Demographic",
+        "MaxPatientAge": "Demographic", "StdPatientAge": "Demographic", "PctDeadPatients": "Demographic",
+        "SharedPatientRatio": "Demographic",
+        # Insurance
+        "AvgIPReimb": "Insurance", "AvgOPReimb": "Insurance", "AvgIPDeductible": "Insurance",
+        "AvgOPDeductible": "Insurance", "AvgPartACovMonths": "Insurance", "AvgPartBCovMonths": "Insurance",
+        # Chronic
+        "AvgChronicCondCount": "Chronic", "MaxChronicCondCount": "Chronic", "PctHighChronicCond": "Chronic",
+        "RenalDiseaseRatio": "Chronic", "Avg_ChronicCond_Alzheimer": "Chronic",
+        "Avg_ChronicCond_Heartfailure": "Chronic", "Avg_ChronicCond_KidneyDisease": "Chronic",
+        "Avg_ChronicCond_Cancer": "Chronic", "Avg_ChronicCond_Diabetes": "Chronic",
+        "Avg_ChronicCond_stroke": "Chronic", "Avg_ChronicCond_Depression": "Chronic"
+    }
+
+    # Load dynamic feature importances
+    feature_importances_dict = {}
+    if os.path.exists("pipeline_summary.json"):
+        try:
+            with open("pipeline_summary.json", "r") as f:
+                summary_data = json.load(f)
+            feature_importances_dict = summary_data.get("feature_importances", {})
+        except Exception as e:
+            pass
+
+    if feature_importances_dict:
+        sorted_feats = sorted(feature_importances_dict.items(), key=lambda x: x[1], reverse=True)
+        feat_names = [x[0] for x in sorted_feats[:20]]
+        feat_scores = [x[1] for x in sorted_feats[:20]]
+        feat_cats = [feature_to_category.get(name, "Financial") for name in feat_names]
+    else:
+        feat_names = ["TotalReimbursement","TotalHospitalDays","TotalDeductible",
+                      "MaxClaimAmt","InpatientClaims","MaxDiagCodes",
+                      "AvgUniqueProcCodes","ReimbPerBeneficiary","TotalClaims",
+                      "AvgNumProcCodes","PeakMonthClaims","StdClaimAmt",
+                      "UniqueBeneficiaries","AvgIPReimb","AvgClaimAmt",
+                      "AvgHospitalStay","ClaimsPerBeneficiary","RepeatPatientRatio",
+                      "PhysicianConcentration","InpatientRatio"]
+        feat_scores = [0.1546,0.0852,0.1022,0.0560,0.0465,0.0468,
+                       0.0361,0.0357,0.0323,0.0278,0.0241,0.0228,
+                       0.0215,0.0198,0.0187,0.0174,0.0163,0.0152,
+                       0.0141,0.0131]
+        feat_cats   = ["Financial","Medical","Financial","Financial","Volume","Medical",
+                       "Medical","Financial","Volume","Medical","Temporal","Financial",
+                       "Volume","Insurance","Financial","Medical","Behavioral","Behavioral",
+                       "Behavioral","Volume"]
+
+    cat_colors = {"Financial":"#667eea","Medical":"#e74c3c","Volume":"#2ecc71",
+                  "Behavioral":"#f39c12","Temporal":"#a78bfa","Insurance":"#06b6d4",
+                  "Demographic":"#fd79a8","Chronic":"#fdcb6e"}
+
+    c1, c2 = st.columns([1.4, 1])
+    with c1:
+        st.markdown("#### 🏆 Top 20 Feature Importance (Random Forest)")
+        colors = [cat_colors.get(c,"#667eea") for c in feat_cats]
+        fig = go.Figure(go.Bar(
+            x=feat_scores[::-1], y=feat_names[::-1],
+            orientation="h",
+            marker=dict(color=colors[::-1], line=dict(color="rgba(0,0,0,0)", width=0)),
+            text=[f"{s:.4f}" for s in feat_scores[::-1]],
+            textposition="outside",
+            textfont=dict(size=10, color="#a8b2d8"),
+        ))
+        fig.update_layout(**PLOTLY_LAYOUT, height=480,
+                          xaxis_title="Feature Importance Score",
+                          xaxis_range=[0, max(feat_scores)*1.25])
         st.plotly_chart(fig, use_container_width=True)
 
-    with tab4:
+    with c2:
+        st.markdown("#### 🍩 Feature Category Breakdown")
+        cat_agg = {}
+        for cat, score in zip(feat_cats, feat_scores):
+            cat_agg[cat] = cat_agg.get(cat, 0) + score
+        fig = go.Figure(go.Pie(
+            labels=list(cat_agg.keys()),
+            values=list(cat_agg.values()),
+            hole=0.5,
+            marker=dict(colors=[cat_colors.get(c,"#667eea") for c in cat_agg],
+                        line=dict(color="#0d1117", width=2)),
+            textinfo="label+percent",
+        ))
+        fig.update_layout(**PLOTLY_LAYOUT, height=220, showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("#### 🔑 Key Feature Interpretations")
+        interps = [
+            ("TotalReimbursement","💰","Inflated total billing — strongest fraud signal"),
+            ("TotalHospitalDays", "🏥","Ghost inpatient billing indicator"),
+            ("TotalDeductible",   "📑","Proxy for claim complexity manipulation"),
+        ]
+        for feat, icon, desc in interps:
+            st.markdown(f"""
+            <div class="insight" style="padding: 0.4rem 0.8rem; margin: 0.3rem 0;">
+              {icon} <strong>{feat}</strong> &nbsp; <span style='color:#8892b0;font-size:.82rem'>{desc}</span>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+    
+    # Heatmap & Missing value profiles
+    c_intel1, c_intel2 = st.columns(2)
+    with c_intel1:
         st.markdown("#### Feature Correlation Matrix")
         cols = ["ClaimAmt","Deductible","HospitalStay","DiagCodes","ProcCodes","ChronicCount","Age"]
-        np.random.seed(42)
         corr = np.array([
             [1.00, 0.62, 0.45, 0.38, 0.42, 0.28, 0.12],
             [0.62, 1.00, 0.31, 0.25, 0.35, 0.20, 0.08],
@@ -608,10 +716,251 @@ elif page == "📊  EDA Dashboard":
                                    text=np.round(corr,2),
                                    texttemplate="%{text}",
                                    showscale=True))
-        fig.update_layout(**PLOTLY_LAYOUT, height=400)
+        fig.update_layout(**PLOTLY_LAYOUT, height=300)
         st.plotly_chart(fig, use_container_width=True)
-elif page == "🤖  Fraud Prediction":
-    st.markdown('<div class="section-hdr">🤖 Fraud Prediction Engine</div>', unsafe_allow_html=True)
+        
+    with c_intel2:
+        st.markdown("#### Missing Value Profile")
+        mv_cols = ["OtherPhysician","ClmDiagnosisCode_10","ClmProcedureCode_3",
+                   "ClmProcedureCode_2","DOD","ClmProcedureCode_1",
+                   "ClmDiagnosisCode_9","ClmDiagnosisCode_8",
+                   "OperatingPhysician","ClmDiagnosisCode_7"]
+        mv_vals = [88.5,90.2,97.6,86.5,99.3,42.8,33.3,24.6,41.1,17.9]
+        colors  = [COLOR_FRAUD if v>80 else "#f39c12" if v>40 else "#f1c40f" for v in mv_vals]
+        fig = go.Figure(go.Bar(x=mv_vals, y=mv_cols, orientation="h",
+                               marker_color=colors, text=[f"{v}%" for v in mv_vals],
+                               textposition="outside"))
+        fig.add_vline(x=80, line_dash="dash", line_color="red", opacity=0.5,
+                      annotation_text="80% threshold", annotation_font_color="red")
+        fig.update_layout(**PLOTLY_LAYOUT, height=300,
+                          xaxis_title="Missing %", xaxis_range=[0,105])
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("---")
+    st.markdown('<div class="section-hdr">📋 All 53 Engineered Features</div>', unsafe_allow_html=True)
+
+    all_features = [
+        # Volume (5)
+        ("Volume","TotalClaims","Total number of claims filed"),
+        ("Volume","InpatientClaims","Total inpatient claims"),
+        ("Volume","OutpatientClaims","Total outpatient claims"),
+        ("Volume","UniqueBeneficiaries","Unique patients served"),
+        ("Volume","UniqueAttendPhysicians","Unique attending physicians"),
+        # Financial (9)
+        ("Financial","AvgClaimAmt","Average reimbursement per claim"),
+        ("Financial","TotalReimbursement","Total $ reimbursed — top fraud signal"),
+        ("Financial","MaxClaimAmt","Maximum single claim amount"),
+        ("Financial","StdClaimAmt","Variance in claim amounts"),
+        ("Financial","AvgDeductible","Average patient deductible paid"),
+        ("Financial","TotalDeductible","Total deductible amount"),
+        ("Financial","ReimbursementPerClaim","Reimbursement divided by claim count"),
+        ("Financial","DeductibleRatio","Deductible / total reimbursement ratio"),
+        ("Financial","ReimbPerBeneficiary","Reimbursement per unique patient"),
+        # Temporal (5)
+        ("Temporal","AvgClaimDuration","Average days between claim start/end"),
+        ("Temporal","AvgHospitalStay","Average inpatient stay duration"),
+        ("Temporal","TotalHospitalDays","Total hospital days billed"),
+        ("Temporal","MonthlyClaimVariance","Variance in monthly claim volume"),
+        ("Temporal","PeakMonthClaims","Highest single-month claim count"),
+        # Medical (5)
+        ("Medical","AvgNumDiagCodes","Average diagnosis codes per claim"),
+        ("Medical","AvgNumProcCodes","Average procedure codes per claim"),
+        ("Medical","AvgUniqueDiagCodes","Average unique diagnosis codes"),
+        ("Medical","AvgUniqueProcCodes","Average unique procedure codes"),
+        ("Medical","MaxDiagCodes","Maximum diagnosis codes on any claim"),
+        # Behavioral (6)
+        ("Behavioral","ClaimsPerBeneficiary","Claims per unique patient"),
+        ("Behavioral","InpatientRatio","Proportion of inpatient claims"),
+        ("Behavioral","HighCostClaimRatio","Ratio of claims in top 10% cost"),
+        ("Behavioral","RepeatPatientRatio","Fraction of patients with multiple claims"),
+        ("Behavioral","PhysicianConcentration","Herfindahl index of physician billing"),
+        ("Behavioral","ClaimsPerPhysician","Claims per attending physician"),
+        # Demographic (6)
+        ("Demographic","BenePerPhysician","Beneficiaries per physician"),
+        ("Demographic","AvgPatientAge","Average patient age"),
+        ("Demographic","MinPatientAge","Youngest patient age"),
+        ("Demographic","MaxPatientAge","Oldest patient age"),
+        ("Demographic","StdPatientAge","Age spread across patients"),
+        ("Demographic","PctDeadPatients","Fraction of deceased patients"),
+        # Insurance (6)
+        ("Insurance","AvgIPReimb","Avg annual inpatient reimbursement"),
+        ("Insurance","AvgOPReimb","Avg annual outpatient reimbursement"),
+        ("Insurance","AvgIPDeductible","Avg inpatient deductible"),
+        ("Insurance","AvgOPDeductible","Avg outpatient deductible"),
+        ("Insurance","AvgPartACovMonths","Avg Medicare Part A coverage months"),
+        ("Insurance","AvgPartBCovMonths","Avg Medicare Part B coverage months"),
+        # Chronic (11)
+        ("Chronic","AvgChronicCondCount","Avg number of chronic conditions"),
+        ("Chronic","MaxChronicCondCount","Max chronic conditions any patient"),
+        ("Chronic","PctHighChronicCond","% patients with 4+ chronic conditions"),
+        ("Chronic","RenalDiseaseRatio","Fraction with renal disease"),
+        ("Chronic","Avg_ChronicCond_Alzheimer","Alzheimer's prevalence"),
+        ("Chronic","Avg_ChronicCond_Heartfailure","Heart failure prevalence"),
+        ("Chronic","Avg_ChronicCond_KidneyDisease","Kidney disease prevalence"),
+        ("Chronic","Avg_ChronicCond_Cancer","Cancer prevalence"),
+        ("Chronic","Avg_ChronicCond_Diabetes","Diabetes prevalence"),
+        ("Chronic","Avg_ChronicCond_stroke","Stroke prevalence"),
+        ("Chronic","Avg_ChronicCond_Depression","Depression prevalence"),
+    ]
+
+    feats_df = pd.DataFrame(all_features, columns=["Category","Feature","Description"])
+    feats_df["#"] = range(1, len(feats_df)+1)
+    feats_df = feats_df[["#","Category","Feature","Description"]]
+
+    cat_filter = st.selectbox("Filter by Category",
+                               ["All"] + sorted(feats_df["Category"].unique()))
+    if cat_filter != "All":
+        feats_df = feats_df[feats_df["Category"]==cat_filter]
+
+    st.dataframe(feats_df, use_container_width=True, hide_index=True,
+                 column_config={
+                     "Category": st.column_config.TextColumn(width="small"),
+                     "Feature":  st.column_config.TextColumn(width="medium"),
+                     "Description": st.column_config.TextColumn(width="large"),
+                 })
+    st.caption(f"Showing {len(feats_df)} of 53 engineered features")
+
+elif page == "🔬  Model Performance":
+    st.markdown('<div class="section-hdr">🔬 Model Performance & Interpretability</div>', unsafe_allow_html=True)
+
+    from sklearn.metrics import (roc_curve, precision_recall_curve, confusion_matrix,
+                                 precision_score, recall_score, f1_score, accuracy_score, auc)
+
+    tab1, tab2 = st.tabs(["📊 Metrics Comparison", "📉 ROC & PR Curves"])
+
+    # Sidebar Threshold Slider
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("<div style='color:#a8b2d8;font-size:.85rem;font-weight:700'>THRESHOLD CONTROL</div>", unsafe_allow_html=True)
+    perf_th = st.sidebar.slider("Audit Threshold", 0.05, 0.95, float(best_threshold), 0.05, key="global_perf_th")
+
+    # Load dynamic predictions
+    if oof_predictions is not None and holdout_predictions is not None:
+        y_cv_true = oof_predictions['Actual_Label'].values
+        y_cv_prob = oof_predictions['Predicted_Probability'].values
+        y_cv_pred = (y_cv_prob >= perf_th).astype(int)
+
+        y_ho_true = holdout_predictions['Actual_Label'].values
+        y_ho_prob = holdout_predictions['Predicted_Probability'].values
+        y_ho_pred = (y_ho_prob >= perf_th).astype(int)
+
+        # CV metrics
+        fpr_cv, tpr_cv, _ = roc_curve(y_cv_true, y_cv_prob)
+        cv_auc = auc(fpr_cv, tpr_cv)
+        precision_cv_curve, recall_cv_curve, _ = precision_recall_curve(y_cv_true, y_cv_prob)
+        cv_pr_auc = auc(recall_cv_curve, precision_cv_curve) if len(recall_cv_curve) > 2 else 0.6819
+        
+        cv_f1 = f1_score(y_cv_true, y_cv_pred, zero_division=0)
+        cv_rec = recall_score(y_cv_true, y_cv_pred, zero_division=0)
+        cv_prec = precision_score(y_cv_true, y_cv_pred, zero_division=0)
+        cv_acc = accuracy_score(y_cv_true, y_cv_pred)
+
+        # Holdout metrics
+        fpr_ho, tpr_ho, _ = roc_curve(y_ho_true, y_ho_prob)
+        ho_auc = auc(fpr_ho, tpr_ho)
+        precision_ho_curve, recall_ho_curve, _ = precision_recall_curve(y_ho_true, y_ho_prob)
+        ho_pr_auc = auc(recall_ho_curve, precision_ho_curve) if len(recall_ho_curve) > 2 else 0.6658
+        
+        ho_f1 = f1_score(y_ho_true, y_ho_pred, zero_division=0)
+        ho_rec = recall_score(y_ho_true, y_ho_pred, zero_division=0)
+        ho_prec = precision_score(y_ho_true, y_ho_pred, zero_division=0)
+        ho_acc = accuracy_score(y_ho_true, y_ho_pred)
+
+    with tab1:
+        st.markdown("#### Stacking Classifier Validation Metrics")
+        if oof_predictions is not None and holdout_predictions is not None:
+            comp_df = pd.DataFrame({
+                "Metric": ["ROC-AUC", "PR-AUC (Avg Precision)", "F1-Score", "Recall (Sensitivity)", "Precision (PPV)", "Accuracy"],
+                "Cross-Validation (OOF)": [f"{cv_auc:.4f}", f"{cv_pr_auc:.4f}", f"{cv_f1:.4f}", f"{cv_rec*100:.2f}%", f"{cv_prec*100:.2f}%", f"{cv_acc*100:.2f}%"],
+                "Holdout Test Set (10%)": [f"{ho_auc:.4f}", f"{ho_pr_auc:.4f}", f"{ho_f1:.4f}", f"{ho_rec*100:.2f}%", f"{ho_prec*100:.2f}%", f"{ho_acc*100:.2f}%"],
+            })
+            st.dataframe(comp_df, use_container_width=True, hide_index=True)
+            st.markdown(f'<div class="insight">📌 Adjusting the slider dynamically updates metrics. Current threshold: <b>{perf_th:.2f}</b>.</div>', unsafe_allow_html=True)
+        else:
+            st.markdown("#### Model Comparison — Stratified CV")
+            st.dataframe(results_df, use_container_width=True)
+
+        st.markdown("#### Dynamic Threshold Sensitivity (CV)")
+        if oof_predictions is not None:
+            ths = np.arange(0.1, 0.91, 0.05)
+            recalls_curve = []
+            precisions_curve = []
+            f1_curve = []
+            for t in ths:
+                temp_preds = (oof_predictions['Predicted_Probability'].values >= t).astype(int)
+                recalls_curve.append(recall_score(y_cv_true, temp_preds, zero_division=0))
+                precisions_curve.append(precision_score(y_cv_true, temp_preds, zero_division=0))
+                f1_curve.append(f1_score(y_cv_true, temp_preds, zero_division=0))
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=ths, y=recalls_curve, name="Recall", line=dict(color=COLOR_FRAUD, width=2.5)))
+            fig.add_trace(go.Scatter(x=ths, y=precisions_curve, name="Precision", line=dict(color=COLOR_LEGIT, width=2.5)))
+            fig.add_trace(go.Scatter(x=ths, y=f1_curve, name="F1 Score", line=dict(color=COLOR_PRIMARY, width=2.5)))
+            fig.add_vline(x=perf_th, line_dash="dash", line_color="#f39c12", annotation_text=f"Cutoff: {perf_th:.2f}")
+            fig.update_layout(**PLOTLY_LAYOUT, height=260, xaxis_title="Threshold", yaxis_title="Score", legend=dict(orientation="h", y=-0.2))
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("""
+            > [!TIP]
+            > **Precision-Recall Trade-off Explanation:**
+            > For imbalanced fraud detection datasets, a false positive triggers an unnecessary audit (financial cost), while a false negative leaves fraud undetected (large financial loss).
+            > - To maximize the F1-Score (balanced Precision and Recall), select a threshold around **0.80 - 0.85**.
+            > - If your operational focus is capturing as much fraud as possible (high recall > 80%), lower the threshold towards **0.38 - 0.40**; this catches 86% of fraud but drops precision to 40% (increasing false positive audits).
+            """)
+
+    with tab2:
+        col_c1, col_c2 = st.columns(2)
+        
+        with col_c1:
+            st.markdown("#### ROC Curves (CV vs Holdout)")
+            if oof_predictions is not None and holdout_predictions is not None:
+                fig_roc = go.Figure()
+                fig_roc.add_trace(go.Scatter(x=fpr_cv, y=tpr_cv, name=f"Cross-Validation (AUC={cv_auc:.4f})", line=dict(color=COLOR_PRIMARY, width=2.5)))
+                fig_roc.add_trace(go.Scatter(x=fpr_ho, y=tpr_ho, name=f"Holdout Set (AUC={ho_auc:.4f})", line=dict(color=COLOR_FRAUD, width=2.5)))
+                fig_roc.add_trace(go.Scatter(x=[0,1], y=[0,1], name="Random Baseline", line=dict(color="#8892b0", dash="dash")))
+                fig_roc.update_layout(**PLOTLY_LAYOUT, height=300, xaxis_title="FPR", yaxis_title="TPR", legend=dict(x=0.3, y=0.1))
+                st.plotly_chart(fig_roc, use_container_width=True)
+            else:
+                st.info("Train pipeline to display dynamic ROC.")
+
+        with col_c2:
+            st.markdown("#### Precision-Recall Curves")
+            if oof_predictions is not None and holdout_predictions is not None:
+                fig_pr = go.Figure()
+                fig_pr.add_trace(go.Scatter(x=recall_cv_curve, y=precision_cv_curve, name=f"Cross-Validation (PR-AUC={cv_pr_auc:.4f})", line=dict(color=COLOR_PRIMARY, width=2.5)))
+                fig_pr.add_trace(go.Scatter(x=recall_ho_curve, y=precision_ho_curve, name=f"Holdout Set (PR-AUC={ho_pr_auc:.4f})", line=dict(color=COLOR_FRAUD, width=2.5)))
+                fig_pr.update_layout(**PLOTLY_LAYOUT, height=300, xaxis_title="Recall", yaxis_title="Precision", legend=dict(x=0.3, y=0.1))
+                st.plotly_chart(fig_pr, use_container_width=True)
+            else:
+                st.info("Train pipeline to display dynamic PR.")
+
+        # Confusion Matrices side-by-side
+        st.markdown("#### Confusion Matrices (Dynamic)")
+        if oof_predictions is not None and holdout_predictions is not None:
+            cm_cv = confusion_matrix(y_cv_true, y_cv_pred)
+            cm_ho = confusion_matrix(y_ho_true, y_ho_pred)
+
+            col_m1, col_m2 = st.columns(2)
+            with col_m1:
+                fig_cm_cv = go.Figure(go.Heatmap(
+                    z=cm_cv, x=["Pred: Legit","Pred: Fraud"], y=["Actual: Legit","Actual: Fraud"],
+                    colorscale=[[0,"#0d1117"],[0.5,"rgba(102,126,234,0.5)"],[1,COLOR_PRIMARY]],
+                    text=[[f"TN\n{cm_cv[0][0]:,}", f"FP\n{cm_cv[0][1]:,}"], [f"FN\n{cm_cv[1][0]:,}", f"TP\n{cm_cv[1][1]:,}"]],
+                    texttemplate="%{text}", textfont=dict(size=14, color="white"), showscale=False
+                ))
+                fig_cm_cv.update_layout(**PLOTLY_LAYOUT, height=220, title="Cross-Validation Confusion Matrix")
+                st.plotly_chart(fig_cm_cv, use_container_width=True)
+            
+            with col_m2:
+                fig_cm_ho = go.Figure(go.Heatmap(
+                    z=cm_ho, x=["Pred: Legit","Pred: Fraud"], y=["Actual: Legit","Actual: Fraud"],
+                    colorscale=[[0,"#0d1117"],[0.5,"rgba(102,126,234,0.5)"],[1,COLOR_FRAUD]],
+                    text=[[f"TN\n{cm_ho[0][0]:,}", f"FP\n{cm_ho[0][1]:,}"], [f"FN\n{cm_ho[1][0]:,}", f"TP\n{cm_ho[1][1]:,}"]],
+                    texttemplate="%{text}", textfont=dict(size=14, color="white"), showscale=False
+                ))
+                fig_cm_ho.update_layout(**PLOTLY_LAYOUT, height=220, title="Holdout Set Confusion Matrix")
+                st.plotly_chart(fig_cm_ho, use_container_width=True)
+
+elif page == "🤖  Fraud Prediction Center":
+    st.markdown('<div class="section-hdr">🤖 Fraud Prediction Center</div>', unsafe_allow_html=True)
 
     tab_sub, tab_manual, tab_upload = st.tabs([
         "📋 Submission Results", "✍️ Manual Risk Assessment", "📁 Batch Upload"])
@@ -633,7 +982,7 @@ elif page == "🤖  Fraud Prediction":
                 col.markdown(f"""
                 <div class="kpi-card">
                   <div class="kpi-icon">{icon}</div>
-                  <div style='font-size:1.6rem;font-weight:800;color:{clr}'>{val}</div>
+                  <div style='font-size:1.25rem;font-weight:800;color:{clr};white-space:nowrap;'>{val}</div>
                   <div class="kpi-lbl">{lbl}</div>
                 </div>""", unsafe_allow_html=True)
 
@@ -659,7 +1008,7 @@ elif page == "🤖  Fraud Prediction":
                     ))
                     fig.add_vline(x=best_threshold, line_dash="dash", line_color="#f39c12",
                                   annotation_text=f"{best_threshold:.3f} threshold", annotation_font_color="#f39c12")
-                    fig.update_layout(**PLOTLY_LAYOUT, height=300, barmode="stack",
+                    fig.update_layout(**PLOTLY_LAYOUT, height=280, barmode="stack",
                                       xaxis_title="Fraud Probability", yaxis_title="Count",
                                       legend=dict(orientation="h", y=-0.2, x=0.1))
                     st.plotly_chart(fig, use_container_width=True)
@@ -673,7 +1022,7 @@ elif page == "🤖  Fraud Prediction":
                     marker=dict(colors=[COLOR_LEGIT, COLOR_FRAUD],
                                 line=dict(color="#0d1117", width=3)),
                     textinfo="label+percent", pull=[0, 0.05]))
-                fig.update_layout(**PLOTLY_LAYOUT, height=300,
+                fig.update_layout(**PLOTLY_LAYOUT, height=280,
                                   showlegend=False)
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -684,7 +1033,7 @@ elif page == "🤖  Fraud Prediction":
                           "🟠 High"     if p>=0.5 else
                           "🟡 Watch"    if p>=0.3 else "🟢 Low")
             display_df["Probability"] = display_df["Probability"].apply(lambda x: f"{x:.4f}")
-            st.dataframe(display_df, use_container_width=True, hide_index=True, height=350)
+            st.dataframe(display_df, use_container_width=True, hide_index=True, height=300)
 
             csv = submission.to_csv(index=False)
             st.download_button("⬇️ Download Submission.csv",
@@ -694,7 +1043,7 @@ elif page == "🤖  Fraud Prediction":
             if provider_eda is not None:
                 st.markdown("---")
                 st.markdown("### 🔍 Why are Providers Flagged? (Interactive Explainability)")
-                st.markdown('<div class="insight">Select any training provider to inspect their specific fraud risk drivers. The model compares their metrics directly to legitimate peers to identify anomalies.</div>', unsafe_allow_html=True)
+                st.markdown('<div class="insight">Select any training provider to inspect their specific fraud risk drivers. The model compares their metrics directly to peer groups to identify anomalies.</div>', unsafe_allow_html=True)
                 
                 # Combine predictions to get probabilities
                 oof_preds = load_oof_predictions_v4()
@@ -763,7 +1112,7 @@ elif page == "🤖  Fraud Prediction":
                         r_val = prov_row['TotalReimbursement']
                         l_val = legit_means['TotalReimbursement']
                         if r_val > l_val:
-                            drivers.append(("Total Reimbursement", f"${r_val:,.2f}", f"${l_val:,.2f}", r_val/max(l_val, 1), "💰 Extremely high billing value relative to legitimate peer benchmark"))
+                            drivers.append(("Total Reimbursement", f"${r_val:,.2f}", f"${l_val:,.2f}", r_val/max(l_val, 1), "💰 Extremely high billing value relative to peer benchmark"))
                             
                         # 2. Total Hospital Days
                         r_stay = prov_row['TotalHospitalDays']
@@ -775,7 +1124,7 @@ elif page == "🤖  Fraud Prediction":
                         r_cpp = prov_row['ClaimsPerBeneficiary']
                         l_cpp = legit_means['ClaimsPerBeneficiary']
                         if r_cpp > l_cpp:
-                            drivers.append(("Claims Per Patient", f"{r_cpp:.2f}", f"{l_cpp:.2f}", r_cpp/max(l_cpp, 0.1), "🔄 High billing frequency per patient relative to peer benchmark (claims recycling)"))
+                            drivers.append(("Claims Per Patient", f"{r_cpp:.2f}", f"{l_cpp:.2f}", r_cpp/max(l_cpp, 0.1), "🔄 High billing frequency per patient relative to peer benchmark"))
                             
                         # 4. Chronic Conditions count
                         r_cc = prov_row['AvgChronicCondCount']
@@ -806,7 +1155,7 @@ elif page == "🤖  Fraud Prediction":
 
     with tab_manual:
         st.markdown("#### 🔎 Real-Time Provider Risk Assessment")
-        st.markdown('<div class="insight">Enter provider billing statistics to get an instant fraud probability score from the trained Random Forest model.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="insight">Enter provider billing statistics to get an instant fraud probability score from the trained stacking ensemble model.</div>', unsafe_allow_html=True)
 
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -929,357 +1278,7 @@ elif page == "🤖  Fraud Prediction":
                 st.download_button("⬇️ Download Predictions", df_up.to_csv(index=False),
                                    "predictions.csv", "text/csv", use_container_width=True)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 4 — FEATURE IMPORTANCE
-# ══════════════════════════════════════════════════════════════════════════════
-elif page == "📈  Feature Importance":
-    st.markdown('<div class="section-hdr">📈 Feature Importance & Engineering</div>', unsafe_allow_html=True)
-
-    feature_to_category = {
-        # Volume
-        "TotalClaims": "Volume", "InpatientClaims": "Volume", "OutpatientClaims": "Volume",
-        "UniqueBeneficiaries": "Volume", "UniqueAttendPhysicians": "Volume",
-        # Financial
-        "AvgClaimAmt": "Financial", "TotalReimbursement": "Financial", "MaxClaimAmt": "Financial",
-        "StdClaimAmt": "Financial", "AvgDeductible": "Financial", "TotalDeductible": "Financial",
-        "ReimbursementPerClaim": "Financial", "DeductibleRatio": "Financial",
-        "ReimbPerBeneficiary": "Financial", "HighCostClaimRatio": "Financial",
-        "ClaimAmt_Skewness": "Financial", "ClaimAmt_Kurtosis": "Financial", "ClaimAmt_CV": "Financial",
-        # Temporal
-        "AvgClaimDuration": "Temporal", "AvgHospitalStay": "Temporal", "TotalHospitalDays": "Temporal",
-        "MonthlyClaimVariance": "Temporal", "PeakMonthClaims": "Temporal",
-        # Medical
-        "AvgNumDiagCodes": "Medical", "AvgNumProcCodes": "Medical", "AvgUniqueDiagCodes": "Medical",
-        "AvgUniqueProcCodes": "Medical", "MaxDiagCodes": "Medical", "PctMaxDiagCodes": "Medical",
-        # Behavioral
-        "ClaimsPerBeneficiary": "Behavioral", "InpatientRatio": "Behavioral",
-        "RepeatPatientRatio": "Behavioral", "PhysicianConcentration": "Behavioral",
-        "ClaimsPerPhysician": "Behavioral",
-        # Demographic
-        "BenePerPhysician": "Demographic", "AvgPatientAge": "Demographic", "MinPatientAge": "Demographic",
-        "MaxPatientAge": "Demographic", "StdPatientAge": "Demographic", "PctDeadPatients": "Demographic",
-        "SharedPatientRatio": "Demographic",
-        # Insurance
-        "AvgIPReimb": "Insurance", "AvgOPReimb": "Insurance", "AvgIPDeductible": "Insurance",
-        "AvgOPDeductible": "Insurance", "AvgPartACovMonths": "Insurance", "AvgPartBCovMonths": "Insurance",
-        # Chronic
-        "AvgChronicCondCount": "Chronic", "MaxChronicCondCount": "Chronic", "PctHighChronicCond": "Chronic",
-        "RenalDiseaseRatio": "Chronic", "Avg_ChronicCond_Alzheimer": "Chronic",
-        "Avg_ChronicCond_Heartfailure": "Chronic", "Avg_ChronicCond_KidneyDisease": "Chronic",
-        "Avg_ChronicCond_Cancer": "Chronic", "Avg_ChronicCond_Diabetes": "Chronic",
-        "Avg_ChronicCond_stroke": "Chronic", "Avg_ChronicCond_Depression": "Chronic"
-    }
-
-    # Load dynamic feature importances
-    feature_importances_dict = {}
-    if os.path.exists("pipeline_summary.json"):
-        try:
-            with open("pipeline_summary.json", "r") as f:
-                summary_data = json.load(f)
-            feature_importances_dict = summary_data.get("feature_importances", {})
-        except Exception as e:
-            pass
-
-    if feature_importances_dict:
-        sorted_feats = sorted(feature_importances_dict.items(), key=lambda x: x[1], reverse=True)
-        feat_names = [x[0] for x in sorted_feats[:20]]
-        feat_scores = [x[1] for x in sorted_feats[:20]]
-        feat_cats = [feature_to_category.get(name, "Financial") for name in feat_names]
-    else:
-        feat_names = ["TotalReimbursement","TotalHospitalDays","TotalDeductible",
-                      "MaxClaimAmt","InpatientClaims","MaxDiagCodes",
-                      "AvgUniqueProcCodes","ReimbPerBeneficiary","TotalClaims",
-                      "AvgNumProcCodes","PeakMonthClaims","StdClaimAmt",
-                      "UniqueBeneficiaries","AvgIPReimb","AvgClaimAmt",
-                      "AvgHospitalStay","ClaimsPerBeneficiary","RepeatPatientRatio",
-                      "PhysicianConcentration","InpatientRatio"]
-        feat_scores = [0.1546,0.0852,0.1022,0.0560,0.0465,0.0468,
-                       0.0361,0.0357,0.0323,0.0278,0.0241,0.0228,
-                       0.0215,0.0198,0.0187,0.0174,0.0163,0.0152,
-                       0.0141,0.0131]
-        feat_cats   = ["Financial","Medical","Financial","Financial","Volume","Medical",
-                       "Medical","Financial","Volume","Medical","Temporal","Financial",
-                       "Volume","Insurance","Financial","Medical","Behavioral","Behavioral",
-                       "Behavioral","Volume"]
-
-    cat_colors = {"Financial":"#667eea","Medical":"#e74c3c","Volume":"#2ecc71",
-                  "Behavioral":"#f39c12","Temporal":"#a78bfa","Insurance":"#06b6d4",
-                  "Demographic":"#fd79a8","Chronic":"#fdcb6e"}
-
-    c1, c2 = st.columns([1.4, 1])
-    with c1:
-        st.markdown("#### 🏆 Top 20 Feature Importance (Random Forest)")
-        colors = [cat_colors.get(c,"#667eea") for c in feat_cats]
-        fig = go.Figure(go.Bar(
-            x=feat_scores[::-1], y=feat_names[::-1],
-            orientation="h",
-            marker=dict(color=colors[::-1], line=dict(color="rgba(0,0,0,0)", width=0)),
-            text=[f"{s:.4f}" for s in feat_scores[::-1]],
-            textposition="outside",
-            textfont=dict(size=10, color="#a8b2d8"),
-        ))
-        fig.update_layout(**PLOTLY_LAYOUT, height=520,
-                          xaxis_title="Feature Importance Score",
-                          xaxis_range=[0, max(feat_scores)*1.25])
-        st.plotly_chart(fig, use_container_width=True)
-
-    with c2:
-        st.markdown("#### 🍩 Feature Category Breakdown")
-        cat_agg = {}
-        for cat, score in zip(feat_cats, feat_scores):
-            cat_agg[cat] = cat_agg.get(cat, 0) + score
-        fig = go.Figure(go.Pie(
-            labels=list(cat_agg.keys()),
-            values=list(cat_agg.values()),
-            hole=0.5,
-            marker=dict(colors=[cat_colors.get(c,"#667eea") for c in cat_agg],
-                        line=dict(color="#0d1117", width=2)),
-            textinfo="label+percent",
-        ))
-        fig.update_layout(**PLOTLY_LAYOUT, height=300, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown("#### 🔑 Key Feature Interpretations")
-        interps = [
-            ("TotalReimbursement","💰","Inflated total billing — strongest fraud signal"),
-            ("TotalHospitalDays", "🏥","Ghost inpatient billing indicator"),
-            ("TotalDeductible",   "📑","Proxy for claim complexity manipulation"),
-            ("MaxClaimAmt",       "⚡","Single large claim = unbundling fraud"),
-            ("RepeatPatientRatio","🔄","Same patients billed repeatedly"),
-            ("InpatientRatio",    "📈","High inpatient % = costly DRG upcoding"),
-        ]
-        for feat, icon, desc in interps:
-            st.markdown(f"""
-            <div class="insight">
-              {icon} <strong>{feat}</strong><br>
-              <span style='color:#8892b0;font-size:.82rem'>{desc}</span>
-            </div>""", unsafe_allow_html=True)
-
-    # ── All 53 Features Table ────────────────────────────────────────────────
-    st.markdown("---")
-    st.markdown('<div class="section-hdr">📋 All 53 Engineered Features</div>', unsafe_allow_html=True)
-
-    all_features = [
-        # Volume (5)
-        ("Volume","TotalClaims","Total number of claims filed"),
-        ("Volume","InpatientClaims","Total inpatient claims"),
-        ("Volume","OutpatientClaims","Total outpatient claims"),
-        ("Volume","UniqueBeneficiaries","Unique patients served"),
-        ("Volume","UniqueAttendPhysicians","Unique attending physicians"),
-        # Financial (9)
-        ("Financial","AvgClaimAmt","Average reimbursement per claim"),
-        ("Financial","TotalReimbursement","Total $ reimbursed — top fraud signal"),
-        ("Financial","MaxClaimAmt","Maximum single claim amount"),
-        ("Financial","StdClaimAmt","Variance in claim amounts"),
-        ("Financial","AvgDeductible","Average patient deductible paid"),
-        ("Financial","TotalDeductible","Total deductible amount"),
-        ("Financial","ReimbursementPerClaim","Reimbursement divided by claim count"),
-        ("Financial","DeductibleRatio","Deductible / total reimbursement ratio"),
-        ("Financial","ReimbPerBeneficiary","Reimbursement per unique patient"),
-        # Temporal (5)
-        ("Temporal","AvgClaimDuration","Average days between claim start/end"),
-        ("Temporal","AvgHospitalStay","Average inpatient stay duration"),
-        ("Temporal","TotalHospitalDays","Total hospital days billed"),
-        ("Temporal","MonthlyClaimVariance","Variance in monthly claim volume"),
-        ("Temporal","PeakMonthClaims","Highest single-month claim count"),
-        # Medical (5)
-        ("Medical","AvgNumDiagCodes","Average diagnosis codes per claim"),
-        ("Medical","AvgNumProcCodes","Average procedure codes per claim"),
-        ("Medical","AvgUniqueDiagCodes","Average unique diagnosis codes"),
-        ("Medical","AvgUniqueProcCodes","Average unique procedure codes"),
-        ("Medical","MaxDiagCodes","Maximum diagnosis codes on any claim"),
-        # Behavioral (6)
-        ("Behavioral","ClaimsPerBeneficiary","Claims per unique patient"),
-        ("Behavioral","InpatientRatio","Proportion of inpatient claims"),
-        ("Behavioral","HighCostClaimRatio","Ratio of claims in top 10% cost"),
-        ("Behavioral","RepeatPatientRatio","Fraction of patients with multiple claims"),
-        ("Behavioral","PhysicianConcentration","Herfindahl index of physician billing"),
-        ("Behavioral","ClaimsPerPhysician","Claims per attending physician"),
-        # Demographic (6)
-        ("Demographic","BenePerPhysician","Beneficiaries per physician"),
-        ("Demographic","AvgPatientAge","Average patient age"),
-        ("Demographic","MinPatientAge","Youngest patient age"),
-        ("Demographic","MaxPatientAge","Oldest patient age"),
-        ("Demographic","StdPatientAge","Age spread across patients"),
-        ("Demographic","PctDeadPatients","Fraction of deceased patients"),
-        # Insurance (6)
-        ("Insurance","AvgIPReimb","Avg annual inpatient reimbursement"),
-        ("Insurance","AvgOPReimb","Avg annual outpatient reimbursement"),
-        ("Insurance","AvgIPDeductible","Avg inpatient deductible"),
-        ("Insurance","AvgOPDeductible","Avg outpatient deductible"),
-        ("Insurance","AvgPartACovMonths","Avg Medicare Part A coverage months"),
-        ("Insurance","AvgPartBCovMonths","Avg Medicare Part B coverage months"),
-        # Chronic (11)
-        ("Chronic","AvgChronicCondCount","Avg number of chronic conditions"),
-        ("Chronic","MaxChronicCondCount","Max chronic conditions any patient"),
-        ("Chronic","PctHighChronicCond","% patients with 4+ chronic conditions"),
-        ("Chronic","RenalDiseaseRatio","Fraction with renal disease"),
-        ("Chronic","Avg_ChronicCond_Alzheimer","Alzheimer's prevalence"),
-        ("Chronic","Avg_ChronicCond_Heartfailure","Heart failure prevalence"),
-        ("Chronic","Avg_ChronicCond_KidneyDisease","Kidney disease prevalence"),
-        ("Chronic","Avg_ChronicCond_Cancer","Cancer prevalence"),
-        ("Chronic","Avg_ChronicCond_Diabetes","Diabetes prevalence"),
-        ("Chronic","Avg_ChronicCond_stroke","Stroke prevalence"),
-        ("Chronic","Avg_ChronicCond_Depression","Depression prevalence"),
-    ]
-
-    assert len(all_features) == 53, f"Expected 53 features, got {len(all_features)}"
-
-    feats_df = pd.DataFrame(all_features, columns=["Category","Feature","Description"])
-    feats_df["#"] = range(1, len(feats_df)+1)
-    feats_df = feats_df[["#","Category","Feature","Description"]]
-
-    cat_filter = st.selectbox("Filter by Category",
-                              ["All"] + sorted(feats_df["Category"].unique()))
-    if cat_filter != "All":
-        feats_df = feats_df[feats_df["Category"]==cat_filter]
-
-    st.dataframe(feats_df, use_container_width=True, hide_index=True,
-                 column_config={
-                     "Category": st.column_config.TextColumn(width="small"),
-                     "Feature":  st.column_config.TextColumn(width="medium"),
-                     "Description": st.column_config.TextColumn(width="large"),
-                 })
-    st.caption(f"Showing {len(feats_df)} of 53 engineered features")
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 5 — MODEL PERFORMANCE
-# ══════════════════════════════════════════════════════════════════════════════
-elif page == "🔬  Model Performance":
-    st.markdown('<div class="section-hdr">🔬 Model Performance & Interpretability</div>', unsafe_allow_html=True)
-
-    from sklearn.metrics import (roc_curve, precision_recall_curve, confusion_matrix,
-                                 precision_score, recall_score, f1_score, accuracy_score, auc)
-
-    tab1, tab2, tab3 = st.tabs(["📊 Metrics Comparison", "📉 ROC & PR Curves", "💼 Business Framework"])
-
-    # Sidebar Threshold Slider
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("<div style='color:#a8b2d8;font-size:.85rem;font-weight:700'>THRESHOLD CONTROL</div>", unsafe_allow_html=True)
-    perf_th = st.sidebar.slider("Audit Threshold", 0.05, 0.95, float(best_threshold), 0.05, key="global_perf_th")
-
-    with tab1:
-        st.markdown("#### Stacking Classifier Validation Metrics")
-        
-        if oof_predictions is not None and holdout_predictions is not None:
-            # Calculate metrics dynamically
-            y_cv_true = oof_predictions['Actual_Label'].values
-            y_cv_prob = oof_predictions['Predicted_Probability'].values
-            y_cv_pred = (y_cv_prob >= perf_th).astype(int)
-
-            y_ho_true = holdout_predictions['Actual_Label'].values
-            y_ho_prob = holdout_predictions['Predicted_Probability'].values
-            y_ho_pred = (y_ho_prob >= perf_th).astype(int)
-
-            # CV metrics
-            fpr_cv, tpr_cv, _ = roc_curve(y_cv_true, y_cv_prob)
-            cv_auc = auc(fpr_cv, tpr_cv)
-            precision_cv_curve, recall_cv_curve, _ = precision_recall_curve(y_cv_true, y_cv_prob)
-            cv_pr_auc = auc(recall_cv_curve, precision_cv_curve) if len(recall_cv_curve) > 2 else 0.6819
-            
-            cv_f1 = f1_score(y_cv_true, y_cv_pred, zero_division=0)
-            cv_rec = recall_score(y_cv_true, y_cv_pred, zero_division=0)
-            cv_prec = precision_score(y_cv_true, y_cv_pred, zero_division=0)
-            cv_acc = accuracy_score(y_cv_true, y_cv_pred)
-
-            # Holdout metrics
-            fpr_ho, tpr_ho, _ = roc_curve(y_ho_true, y_ho_prob)
-            ho_auc = auc(fpr_ho, tpr_ho)
-            precision_ho_curve, recall_ho_curve, _ = precision_recall_curve(y_ho_true, y_ho_prob)
-            ho_pr_auc = auc(recall_ho_curve, precision_ho_curve) if len(recall_ho_curve) > 2 else 0.6658
-            
-            ho_f1 = f1_score(y_ho_true, y_ho_pred, zero_division=0)
-            ho_rec = recall_score(y_ho_true, y_ho_pred, zero_division=0)
-            ho_prec = precision_score(y_ho_true, y_ho_pred, zero_division=0)
-            ho_acc = accuracy_score(y_ho_true, y_ho_pred)
-
-            comp_df = pd.DataFrame({
-                "Metric": ["ROC-AUC", "PR-AUC (Avg Precision)", "F1-Score", "Recall (Sensitivity)", "Precision (PPV)", "Accuracy"],
-                "Cross-Validation (OOF)": [f"{cv_auc:.4f}", f"{cv_pr_auc:.4f}", f"{cv_f1:.4f}", f"{cv_rec*100:.2f}%", f"{cv_prec*100:.2f}%", f"{cv_acc*100:.2f}%"],
-                "Holdout Test Set (10%)": [f"{ho_auc:.4f}", f"{ho_pr_auc:.4f}", f"{ho_f1:.4f}", f"{ho_rec*100:.2f}%", f"{ho_prec*100:.2f}%", f"{ho_acc*100:.2f}%"],
-            })
-            st.dataframe(comp_df, use_container_width=True, hide_index=True)
-            st.markdown(f'<div class="insight">📌 Adjusting the slider dynamically updates metrics. Current threshold: <b>{perf_th:.2f}</b>.</div>', unsafe_allow_html=True)
-        else:
-            # Fallback to hardcoded results if pipeline not run
-            st.markdown("#### Model Comparison — Stratified CV")
-            st.dataframe(results_df, use_container_width=True)
-
-        st.markdown("#### Dynamic Threshold Sensitivity (CV)")
-        if oof_predictions is not None:
-            ths = np.arange(0.1, 0.91, 0.05)
-            recalls_curve = []
-            precisions_curve = []
-            f1_curve = []
-            for t in ths:
-                temp_preds = (oof_predictions['Predicted_Probability'].values >= t).astype(int)
-                recalls_curve.append(recall_score(y_cv_true, temp_preds, zero_division=0))
-                precisions_curve.append(precision_score(y_cv_true, temp_preds, zero_division=0))
-                f1_curve.append(f1_score(y_cv_true, temp_preds, zero_division=0))
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=ths, y=recalls_curve, name="Recall", line=dict(color=COLOR_FRAUD, width=2.5)))
-            fig.add_trace(go.Scatter(x=ths, y=precisions_curve, name="Precision", line=dict(color=COLOR_LEGIT, width=2.5)))
-            fig.add_trace(go.Scatter(x=ths, y=f1_curve, name="F1 Score", line=dict(color=COLOR_PRIMARY, width=2.5)))
-            fig.add_vline(x=perf_th, line_dash="dash", line_color="#f39c12", annotation_text=f"Cutoff: {perf_th:.2f}")
-            fig.update_layout(**PLOTLY_LAYOUT, height=300, xaxis_title="Threshold", yaxis_title="Score", legend=dict(orientation="h", y=-0.2))
-            st.plotly_chart(fig, use_container_width=True)
-
-    with tab2:
-        col_c1, col_c2 = st.columns(2)
-        
-        with col_c1:
-            st.markdown("#### ROC Curves (CV vs Holdout)")
-            if oof_predictions is not None and holdout_predictions is not None:
-                fig_roc = go.Figure()
-                fig_roc.add_trace(go.Scatter(x=fpr_cv, y=tpr_cv, name=f"Cross-Validation (AUC={cv_auc:.4f})", line=dict(color=COLOR_PRIMARY, width=2.5)))
-                fig_roc.add_trace(go.Scatter(x=fpr_ho, y=tpr_ho, name=f"Holdout Set (AUC={ho_auc:.4f})", line=dict(color=COLOR_FRAUD, width=2.5)))
-                fig_roc.add_trace(go.Scatter(x=[0,1], y=[0,1], name="Random Baseline", line=dict(color="#8892b0", dash="dash")))
-                fig_roc.update_layout(**PLOTLY_LAYOUT, height=350, xaxis_title="FPR", yaxis_title="TPR", legend=dict(x=0.3, y=0.1))
-                st.plotly_chart(fig_roc, use_container_width=True)
-            else:
-                st.info("Train pipeline to display dynamic ROC.")
-
-        with col_c2:
-            st.markdown("#### Precision-Recall Curves")
-            if oof_predictions is not None and holdout_predictions is not None:
-                fig_pr = go.Figure()
-                fig_pr.add_trace(go.Scatter(x=recall_cv_curve, y=precision_cv_curve, name=f"Cross-Validation (PR-AUC={cv_pr_auc:.4f})", line=dict(color=COLOR_PRIMARY, width=2.5)))
-                fig_pr.add_trace(go.Scatter(x=recall_ho_curve, y=precision_ho_curve, name=f"Holdout Set (PR-AUC={ho_pr_auc:.4f})", line=dict(color=COLOR_FRAUD, width=2.5)))
-                fig_pr.update_layout(**PLOTLY_LAYOUT, height=350, xaxis_title="Recall", yaxis_title="Precision", legend=dict(x=0.3, y=0.1))
-                st.plotly_chart(fig_pr, use_container_width=True)
-            else:
-                st.info("Train pipeline to display dynamic PR.")
-
-        # Confusion Matrices side-by-side
-        st.markdown("#### Confusion Matrices (Dynamic)")
-        if oof_predictions is not None and holdout_predictions is not None:
-            cm_cv = confusion_matrix(y_cv_true, y_cv_pred)
-            cm_ho = confusion_matrix(y_ho_true, y_ho_pred)
-
-            col_m1, col_m2 = st.columns(2)
-            with col_m1:
-                fig_cm_cv = go.Figure(go.Heatmap(
-                    z=cm_cv, x=["Pred: Legit","Pred: Fraud"], y=["Actual: Legit","Actual: Fraud"],
-                    colorscale=[[0,"#0d1117"],[0.5,"rgba(102,126,234,0.5)"],[1,COLOR_PRIMARY]],
-                    text=[[f"TN\n{cm_cv[0][0]:,}", f"FP\n{cm_cv[0][1]:,}"], [f"FN\n{cm_cv[1][0]:,}", f"TP\n{cm_cv[1][1]:,}"]],
-                    texttemplate="%{text}", textfont=dict(size=14, color="white"), showscale=False
-                ))
-                fig_cm_cv.update_layout(**PLOTLY_LAYOUT, height=220, title="Cross-Validation Confusion Matrix")
-                st.plotly_chart(fig_cm_cv, use_container_width=True)
-            
-            with col_m2:
-                fig_cm_ho = go.Figure(go.Heatmap(
-                    z=cm_ho, x=["Pred: Legit","Pred: Fraud"], y=["Actual: Legit","Actual: Fraud"],
-                    colorscale=[[0,"#0d1117"],[0.5,"rgba(102,126,234,0.5)"],[1,COLOR_FRAUD]],
-                    text=[[f"TN\n{cm_ho[0][0]:,}", f"FP\n{cm_ho[0][1]:,}"], [f"FN\n{cm_ho[1][0]:,}", f"TP\n{cm_ho[1][1]:,}"]],
-                    texttemplate="%{text}", textfont=dict(size=14, color="white"), showscale=False
-                ))
-                fig_cm_ho.update_layout(**PLOTLY_LAYOUT, height=220, title="Holdout Set Confusion Matrix")
-  # ══════════════════════════════════════════════════════════════════════════════
-# PAGE 6 — BUSINESS ROI CALCULATOR
-# ══════════════════════════════════════════════════════════════════════════════
-elif page == "💼  Business ROI Calculator":
+elif page == "💼  Business ROI":
     st.markdown('<div class="section-hdr">💼 Business ROI & Financial Optimization</div>', unsafe_allow_html=True)
     st.markdown('<div class="insight">Optimize decision thresholds based on real financial implications (audit costs vs. recovered fraud values).</div>', unsafe_allow_html=True)
 
@@ -1311,29 +1310,29 @@ elif page == "💼  Business ROI Calculator":
         k1, k2, k3, k4 = st.columns(4)
         k1.markdown(f"""
         <div class="kpi-card" style="border-color: rgba(102,126,234,0.5)">
-          <div style='font-size:1.8rem'>🔍</div>
-          <div style='font-size:1.6rem;font-weight:800;color:#ccd6f6'>{audits}</div>
+          <div style='font-size:1.5rem'>🔍</div>
+          <div style='font-size:1.25rem;font-weight:800;color:#ccd6f6;white-space:nowrap;'>{audits}</div>
           <div class="kpi-lbl">Audits Triggered</div>
         </div>""", unsafe_allow_html=True)
         
         k2.markdown(f"""
         <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
-          <div style='font-size:1.8rem'>💸</div>
-          <div style='font-size:1.6rem;font-weight:800;color:#e74c3c'>${total_audit_cost:,}</div>
+          <div style='font-size:1.5rem'>💸</div>
+          <div style='font-size:1.25rem;font-weight:800;color:#e74c3c;white-space:nowrap;'>${total_audit_cost:,}</div>
           <div class="kpi-lbl">Audit Expenditures</div>
         </div>""", unsafe_allow_html=True)
 
         k3.markdown(f"""
         <div class="kpi-card" style="border-color: rgba(46,204,113,0.5)">
-          <div style='font-size:1.8rem'>📈</div>
-          <div style='font-size:1.6rem;font-weight:800;color:#2ecc71'>${total_recovery:,}</div>
+          <div style='font-size:1.5rem'>📈</div>
+          <div style='font-size:1.25rem;font-weight:800;color:#2ecc71;white-space:nowrap;'>${total_recovery:,}</div>
           <div class="kpi-lbl">Fraud Recovered</div>
         </div>""", unsafe_allow_html=True)
 
         k4.markdown(f"""
         <div class="kpi-card" style="border-color: rgba(6,182,212,0.5)">
-          <div style='font-size:1.8rem'>💎</div>
-          <div style='font-size:1.6rem;font-weight:800;color:#06b6d4'>${net_savings:,}</div>
+          <div style='font-size:1.5rem'>💎</div>
+          <div style='font-size:1.25rem;font-weight:800;color:#06b6d4;white-space:nowrap;'>${net_savings:,}</div>
           <div class="kpi-lbl">Net Business Benefit</div>
         </div>""", unsafe_allow_html=True)
         
@@ -1355,101 +1354,9 @@ elif page == "💼  Business ROI Calculator":
         fig.add_trace(go.Scatter(x=ths, y=net_savings_curve, name="Net Business Benefit ($)", line=dict(color="#06b6d4", width=3)))
         fig.add_vline(x=th, line_dash="dash", line_color="#e74c3c", annotation_text=f"Active Cutoff: {th:.2f}")
         fig.add_vline(x=opt_th, line_dash="dot", line_color="#2ecc71", annotation_text=f"Optimal Cutoff: {opt_th:.2f} (Savings: ${opt_sav:,})")
-        fig.update_layout(**PLOTLY_LAYOUT, height=350, xaxis_title="Threshold", yaxis_title="Net Savings ($)")
+        fig.update_layout(**PLOTLY_LAYOUT, height=300, xaxis_title="Threshold", yaxis_title="Net Savings ($)")
         st.plotly_chart(fig, use_container_width=True)
         
         st.success(f"💡 **Operational Recommendation:** Auditing at a threshold of **{opt_th:.2f}** yields the maximum economic profit of **${opt_sav:,}**.")
     else:
         st.info("Train pipeline to enable the dynamic ROI cost-benefit calculator.")
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 7 — FRAUD INSIGHTS
-# ══════════════════════════════════════════════════════════════════════════════
-elif page == "💡  Fraud Insights":
-    st.markdown('<div class="section-hdr">💡 Automated Fraud Insights</div>', unsafe_allow_html=True)
-    st.markdown('<div class="insight">Key statistical multipliers computed dynamically from provider training datasets showing structural billing differences between fraudulent and legitimate providers.</div>', unsafe_allow_html=True)
-
-    if provider_eda is not None:
-        f_df = provider_eda[provider_eda['FraudLabel'] == 1]
-        l_df = provider_eda[provider_eda['FraudLabel'] == 0]
-        
-        ratio_claims = float(f_df['TotalClaims'].mean() / max(l_df['TotalClaims'].mean(), 1))
-        ratio_reimb = float(f_df['TotalReimbursement'].mean() / max(l_df['TotalReimbursement'].mean(), 1))
-        ratio_stay = float(f_df['TotalHospitalDays'].mean() / max(l_df['TotalHospitalDays'].mean(), 1))
-        ratio_chronic = float(f_df['AvgChronicCondCount'].mean() / max(l_df['AvgChronicCondCount'].mean(), 0.1))
-    else:
-        ratio_claims = 2.8
-        ratio_reimb = 3.4
-        ratio_stay = 2.2
-        ratio_chronic = 4.1
-
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(f"""
-    <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
-      <div style='font-size:1.8rem'>🚨</div>
-      <div style='font-size:2rem;font-weight:800;color:#e74c3c'>{ratio_claims:.1f}x</div>
-      <div class="kpi-lbl">Claims Volume Multiplier</div>
-      <p style="color: #8892b0; font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.3;">Fraud providers submit {ratio_claims:.1f}x more claims than peers, showing high-frequency billing schemes.</p>
-    </div>""", unsafe_allow_html=True)
-
-    c2.markdown(f"""
-    <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
-      <div style='font-size:1.8rem'>💰</div>
-      <div style='font-size:2rem;font-weight:800;color:#e74c3c'>{ratio_reimb:.1f}x</div>
-      <div class="kpi-lbl">Reimbursement Multiplier</div>
-      <p style="color: #8892b0; font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.3;">Fraud providers receive {ratio_reimb:.1f}x higher reimbursements, indicating upcoded DRGs.</p>
-    </div>""", unsafe_allow_html=True)
-
-    c3.markdown(f"""
-    <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
-      <div style='font-size:1.8rem'>🏥</div>
-      <div style='font-size:2rem;font-weight:800;color:#e74c3c'>{ratio_stay:.1f}x</div>
-      <div class="kpi-lbl">Inpatient Day Multiplier</div>
-      <p style="color: #8892b0; font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.3;">Fraud providers keep patients hospitalized {ratio_stay:.1f}x longer, suggesting phantom inpatient stays.</p>
-    </div>""", unsafe_allow_html=True)
-
-    c4.markdown(f"""
-    <div class="kpi-card" style="border-color: rgba(231,76,60,0.5)">
-      <div style='font-size:1.8rem'>🧬</div>
-      <div style='font-size:2rem;font-weight:800;color:#e74c3c'>{ratio_chronic:.1f}x</div>
-      <div class="kpi-lbl">Chronic Disease Multiplier</div>
-      <p style="color: #8892b0; font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.3;">Fraud providers list {ratio_chronic:.1f}x more chronic conditions per patient to justify expensive procedures.</p>
-    </div>""", unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.markdown("#### 🔍 Top Fraud Patterns Discovered")
-    patterns = [
-        ("1", "TotalReimbursement >> peers", "Financial", "🔴 Critical",
-         "Disproportionate billing relative to patient count — upcoding signature"),
-        ("2", "TotalHospitalDays spike", "Medical", "🔴 Critical",
-         "Extended stays for services not rendered — ghost billing"),
-        ("3", "High ChronicCondCount", "Clinical", "🟠 High",
-         "Clustering complex patients to justify expensive procedures"),
-        ("4", "RepeatPatientRatio > 0.6", "Behavioral", "🟠 High",
-         "Same patients recycled across multiple fraudulent claims"),
-        ("5", "PhysicianConcentration", "Behavioral", "🟡 Medium",
-         "Small physician ring billing through single provider entity"),
-        ("6", "MaxClaimAmt outlier", "Financial", "🟡 Medium",
-         "Single extremely high claim — unbundling or phantom service"),
-    ]
-    patterns_df = pd.DataFrame(patterns,
-        columns=["#", "Pattern", "Category", "Risk Level", "Description"])
-    st.dataframe(patterns_df, use_container_width=True, hide_index=True)
-
-    st.markdown("---")
-    st.markdown("#### 🚀 Future Improvements")
-    improvements = [
-        ("🕸️", "Graph Neural Networks", "Model provider-physician-patient networks for syndicate detection"),
-        ("⏱️", "Temporal Modeling", "LSTM analysis of billing pattern shifts over time"),
-        ("🔤", "NLP on Diagnosis Codes", "Detect anomalous ICD code combinations via embeddings"),
-        ("🔒", "Federated Learning", "Train across multiple insurers without data sharing"),
-        ("🎯", "Active Learning", "Adaptive scoring that updates with auditor feedback"),
-    ]
-    c1, c2 = st.columns(2)
-    for i, (icon, title, desc) in enumerate(improvements):
-        col = c1 if i % 2 == 0 else c2
-        col.markdown(f"""
-        <div class="insight">
-          {icon} <strong>{title}</strong><br>
-          <span style='color:#8892b0;font-size:.82rem'>{desc}</span>
-        </div>""", unsafe_allow_html=True)

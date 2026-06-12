@@ -5,6 +5,7 @@ Features: Advanced FE, Optuna, Stacking, Threshold Optimization
 """
 
 import sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 import pandas as pd
 import numpy as np
@@ -159,6 +160,9 @@ def engineer_provider_features(merged_df):
     
     # 5. Patient demographics
     feats['AvgPatientAge']          = g['Age'].mean()
+    feats['MinPatientAge']          = g['Age'].min()
+    feats['MaxPatientAge']          = g['Age'].max()
+    feats['StdPatientAge']          = g['Age'].std().fillna(0)
     feats['PctDeadPatients']        = g['IsDead'].mean()
     
     # 6. Chronic disease
@@ -183,6 +187,20 @@ def engineer_provider_features(merged_df):
     repeat   = bcc[bcc['ClaimID'] > 1].groupby('Provider')['BeneID'].count()
     all_bene = bcc.groupby('Provider')['BeneID'].count()
     feats['RepeatPatientRatio'] = (repeat / all_bene).fillna(0)
+
+    # 9. Missing Insurance features
+    feats['AvgIPReimb']      = g['IPAnnualReimbursementAmt'].mean()
+    feats['AvgOPReimb']      = g['OPAnnualReimbursementAmt'].mean()
+    feats['AvgIPDeductible'] = g['IPAnnualDeductibleAmt'].mean()
+    feats['AvgOPDeductible'] = g['OPAnnualDeductibleAmt'].mean()
+    feats['AvgPartACovMonths'] = g['NoOfMonths_PartACov'].mean()
+    feats['AvgPartBCovMonths'] = g['NoOfMonths_PartBCov'].mean()
+    
+    # 10. Attending physician concentration and ratios
+    feats['ClaimsPerPhysician'] = feats['TotalClaims'] / (feats['UniqueAttendPhysicians'] + 1)
+    feats['BenePerPhysician']   = feats['UniqueBeneficiaries'] / (feats['UniqueAttendPhysicians'] + 1)
+    feats['PhysicianConcentration'] = g['AttendingPhysician'].apply(
+        lambda x: (x.value_counts(normalize=True)**2).sum() if len(x) > 0 else 0)
     
     feats = feats.reset_index()
     return feats
@@ -255,15 +273,18 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 fraud_ratio = float((y_all == 0).sum()) / (y_all == 1).sum()
 
+device_val = 'cuda'
+try:
+    import numpy as np
+    dummy_model = xgb.XGBClassifier(device='cuda')
+    dummy_model.fit(np.zeros((2, 2)), np.zeros(2))
+    print("  ✅ CUDA verified for XGBoost fitting. GPU acceleration active.")
+except Exception as e:
+    device_val = 'cpu'
+    print(f"  ⚠️ CUDA check failed: {e}. Falling back to CPU.")
+
 print("  ▶ Running Optuna on XGBoost (GPU) - 100 trials...")
 def objective(trial):
-    device_val = 'cuda'
-    try:
-        import torch
-        if not torch.cuda.is_available():
-            device_val = 'cpu'
-    except:
-        device_val = 'cpu'
     params = {
         'n_estimators':      trial.suggest_int('n_estimators', 200, 800),
         'max_depth':         trial.suggest_int('max_depth', 3, 9),
@@ -293,13 +314,6 @@ study.optimize(objective, n_trials=100)
 print(f"  ✅ Best XGBoost ROC-AUC: {study.best_value:.4f}")
 
 print("\n  ▶ Training Stacking Classifier (5-Fold CV)...")
-device_val = 'cuda'
-try:
-    import torch
-    if not torch.cuda.is_available():
-        device_val = 'cpu'
-except:
-    device_val = 'cpu'
 
 estimators = [
     ('xgb', xgb.XGBClassifier(
@@ -323,7 +337,7 @@ stack_clf = StackingClassifier(
     estimators=estimators,
     final_estimator=LogisticRegression(class_weight='balanced'),
     cv=5,
-    n_jobs=-1
+    n_jobs=1
 )
 
 from sklearn.model_selection import cross_val_predict

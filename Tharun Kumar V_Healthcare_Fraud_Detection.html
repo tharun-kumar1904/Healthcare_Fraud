@@ -53,7 +53,7 @@
 
 <div class="header">
   <h1>🏥 Healthcare Provider Fraud Detection</h1>
-  <p>End-to-End Machine Learning Solution &nbsp;|&nbsp; Sagility Data Science Case Study</p>
+  <p>End-to-End Machine Learning Solution &nbsp;|&nbsp; Healthcare Provider Fraud Case Study</p>
   <p style="margin-top:.5rem;opacity:.7">Model: Stacking Ensemble (XGB, LGBM, CatBoost) &nbsp;|&nbsp; ROC-AUC: 0.9343</p>
 </div>
 
@@ -62,14 +62,14 @@
   <div class="kpi"><div class="kpi-val">558K</div><div class="kpi-lbl">Claims Processed</div></div>
   <div class="kpi"><div class="kpi-val">53</div><div class="kpi-lbl">Features Engineered</div></div>
   <div class="kpi"><div class="kpi-val">93.4%</div><div class="kpi-lbl">ROC-AUC</div></div>
-  <div class="kpi"><div class="kpi-val">152/1353</div><div class="kpi-lbl">Test Fraud Flagged</div></div>
+  <div class="kpi"><div class="kpi-val">151/1353</div><div class="kpi-lbl">Test Fraud Flagged</div></div>
 </div>
 
 <div class="section">
   <h2>📊 Model Performance Results</h2>
   <p>5-Fold Stratified Cross-Validation with SMOTE oversampling for class imbalance (9.7:1 ratio):</p>
   <table class="metrics"><thead><tr><th>Model</th><th>ROC_AUC</th><th>PR_AUC</th><th>F1</th><th>Precision</th><th>Recall</th><th>Accuracy</th></tr></thead><tbody><tr style="font-weight:700;background:rgba(102,126,234,0.08);"><td>Stacking Ensemble (XGB, LGBM, CatBoost)</td><td>0.9384</td><td>0.6681</td><td>0.5751</td><td>0.434</td><td>0.8518</td><td>0.8823</td></tr><tr style=""><td>Random Forest (300)</td><td>0.9352</td><td>0.6615</td><td>0.5679</td><td>0.4259</td><td>0.8518</td><td>0.8787</td></tr><tr style=""><td>XGBoost</td><td>0.9296</td><td>0.6738</td><td>0.5736</td><td>0.4399</td><td>0.8241</td><td>0.8854</td></tr><tr style=""><td>Logistic Regression</td><td>0.894</td><td>0.663</td><td>0.5799</td><td>0.4586</td><td>0.7885</td><td>0.8932</td></tr></tbody></table>
-  <p style="margin-top:1rem;color:#667eea"><strong>Best Model: Stacking Ensemble (XGB, LGBM, CatBoost)</strong> — ROC-AUC: 0.9343 | F1: 0.6316 | Recall: 71.2% | Precision: 56.7%</p>
+  <p style="margin-top:1rem;color:#667eea"><strong>Best Model: Stacking Ensemble (XGB, LGBM, CatBoost)</strong> — ROC-AUC: 0.9343 | F1: 0.6340 | Recall: 69.7% | Precision: 58.2%</p>
 </div>
 
 <div class="section">
@@ -113,8 +113,8 @@
 
 <div class="section">
   <h2>📋 Submission Preview — Tharun Kumar V_Submission.csv</h2>
-  <p>1,353 test providers | <strong style="color:#e74c3c">152 Fraudulent (11.2%)</strong> | <strong style="color:#27ae60">1201 Legitimate</strong></p>
-  <table class="metrics"><thead><tr><th>Provider</th><th>Probability</th><th>Predicted Class</th></tr></thead><tbody><tr><td>PRV51002</td><td>0.1151</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51006</td><td>0.1055</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51009</td><td>0.1149</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51010</td><td>0.1846</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51018</td><td>0.1158</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51019</td><td>0.0998</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51020</td><td>0.1146</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51022</td><td>0.3188</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51028</td><td>0.0989</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51033</td><td>0.1025</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51034</td><td>0.1059</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51039</td><td>0.8491</td><td style="color:#e74c3c;font-weight:700">Yes</td></tr><tr><td>PRV51050</td><td>0.1448</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51051</td><td>0.5711</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51069</td><td>0.9473</td><td style="color:#e74c3c;font-weight:700">Yes</td></tr><tr><td>PRV51073</td><td>0.9673</td><td style="color:#e74c3c;font-weight:700">Yes</td></tr><tr><td>PRV51079</td><td>0.2327</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51080</td><td>0.4355</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51085</td><td>0.1174</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51087</td><td>0.0999</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51088</td><td>0.1493</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51092</td><td>0.1023</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51094</td><td>0.1026</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51095</td><td>0.102</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51099</td><td>0.117</td><td style="color:#27ae60">No</td></tr><tr><td colspan="3" style="text-align:center;color:#888">... 1328 more rows ...</td></tr></tbody></table>
+  <p>1,353 test providers | <strong style="color:#e74c3c">151 Fraudulent (11.2%)</strong> | <strong style="color:#27ae60">1202 Legitimate</strong></p>
+  <table class="metrics"><thead><tr><th>Provider</th><th>Probability</th><th>Predicted Class</th></tr></thead><tbody><tr><td>PRV51002</td><td>0.0884</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51006</td><td>0.082</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51009</td><td>0.0889</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51010</td><td>0.1622</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51018</td><td>0.0975</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51019</td><td>0.0755</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51020</td><td>0.0885</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51022</td><td>0.3188</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51028</td><td>0.0743</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51033</td><td>0.0769</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51034</td><td>0.0846</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51039</td><td>0.7876</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51050</td><td>0.1074</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51051</td><td>0.6347</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51069</td><td>0.9404</td><td style="color:#e74c3c;font-weight:700">Yes</td></tr><tr><td>PRV51073</td><td>0.9617</td><td style="color:#e74c3c;font-weight:700">Yes</td></tr><tr><td>PRV51079</td><td>0.5311</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51080</td><td>0.3612</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51085</td><td>0.0919</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51087</td><td>0.0745</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51088</td><td>0.1034</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51092</td><td>0.0792</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51094</td><td>0.084</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51095</td><td>0.0819</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51099</td><td>0.0897</td><td style="color:#27ae60">No</td></tr><tr><td colspan="3" style="text-align:center;color:#888">... 1328 more rows ...</td></tr></tbody></table>
 </div>
 
 <div class="section">
@@ -788,7 +788,7 @@ submission.head(10)
 </div>
 
 <footer>
-  Healthcare Provider Fraud Detection &nbsp;|&nbsp; Sagility Data Science Case Study 2026<br>
+  Healthcare Provider Fraud Detection &nbsp;|&nbsp; Healthcare Provider Fraud Case Study<br>
   Model: Stacking Ensemble (XGB, LGBM, CatBoost) &nbsp;|&nbsp; ROC-AUC: 0.9343 &nbsp;|&nbsp; 35 Features Selected
 </footer>
 
