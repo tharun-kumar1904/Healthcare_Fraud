@@ -187,7 +187,7 @@ if page == "Overview":
         st.subheader("Key Findings & Multipliers")
         st.markdown("""
         Analysis of the historical training data reveals major differences between legitimate and fraudulent providers:
-        * **Reimbursements**: Fraudulent providers claim a median of **$373,450** compared to **$15,055** for legitimate peers (**24.8x higher**).
+        * **Reimbursements**: Fraudulent providers claim a median of **&#36;373,450** compared to **&#36;15,055** for legitimate peers (**24.8x higher**).
         * **Claim Volume**: Fraudulent providers submit a median of **155.5 claims** compared to **27.0** for legitimate peers (**5.8x higher**).
         * **Hospital Stays**: Hospital stay duration averages **265.6 days** for fraudulent providers compared to **19.4 days** for legitimate peers (**13.7x longer**).
         """)
@@ -278,7 +278,7 @@ elif page == "Data Analysis":
     st.write("Detailed visual analysis of the provider behavioral distributions.")
     
     st.subheader("Claim Amount Distribution")
-    st.markdown("Median Claim Reimbursements: **Fraudulent: $373,450** vs **Legitimate: $15,055**")
+    st.markdown("Median Claim Reimbursements: **Fraudulent: &#36;373,450** vs **Legitimate: &#36;15,055**")
     
     if provider_eda is not None:
         fig_df = provider_eda.copy()
@@ -547,7 +547,7 @@ elif page == "Predictions":
                     claims_ratio = prov_claims / 27.0
                     stay_ratio = prov_stay / 19.4
                     
-                    st.markdown(f"1. **Reimbursements**: Billed **${prov_reimb:,.2f}** (**{reimb_ratio:.1f}x** peer median).")
+                    st.markdown(f"1. **Reimbursements**: Billed **&#36;{prov_reimb:,.2f}** (**{reimb_ratio:.1f}x** peer median).")
                     st.markdown(f"2. **Claims Count**: Submitted **{prov_claims:.0f}** claims (**{claims_ratio:.1f}x** peer median).")
                     st.markdown(f"3. **Inpatient stay**: Recorded **{prov_stay:.1f}** bed days (**{stay_ratio:.1f}x** peer mean).")
                     st.markdown(f"4. **Max Diagnoses count**: Recorded **{prov_diag:.1f}** diagnoses per claim.")

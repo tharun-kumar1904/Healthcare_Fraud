@@ -49,7 +49,7 @@ COLOR_PRIMARY = RGBColor(0x00, 0x00, 0x00) # Pure Black
 COLOR_SECONDARY = RGBColor(0x33, 0x33, 0x33) # Dark Gray
 COLOR_TEXT = RGBColor(0x11, 0x11, 0x11) # Black
 COLOR_HEADER_BG = "F2F2F2" # Very light gray for table headers
-COLOR_BORDER = "555555" # Thin dark gray/black borders
+COLOR_BORDER = "000000" # Pure black borders
 
 doc = Document()
 
