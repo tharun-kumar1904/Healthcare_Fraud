@@ -9,10 +9,10 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 import pandas as pd
 import numpy as np
-import matplotlib  # pyrefly: ignore [missing-import]
+import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt  # pyrefly: ignore [missing-import]
-import seaborn as sns  # pyrefly: ignore [missing-import]
+import matplotlib.pyplot as plt
+import seaborn as sns
 import warnings
 import pickle
 import os
@@ -32,7 +32,6 @@ print("  HEALTHCARE PROVIDER FRAUD DETECTION PIPELINE (GPU)")
 print("  Sagility Data Science Case Study — Tharun")
 print("=" * 65)
 
-# ─── PHASE 1: LOAD DATA ───────────────────────────────────────────────────────
 print("\n📁 Phase 1 — Loading Datasets...")
 train_labels = pd.read_csv(TD + "Train-1542865627584.csv")
 bene         = pd.read_csv(TD + "Train_Beneficiarydata-1542865627584.csv")
@@ -53,7 +52,6 @@ fraud_dist = train_labels['PotentialFraud'].value_counts()
 print(f"\n  Class Balance : Yes={fraud_dist.get('Yes',0)} | No={fraud_dist.get('No',0)}")
 print(f"  Imbalance     : {fraud_dist.get('No',0)/max(fraud_dist.get('Yes',1),1):.1f}:1 (No:Yes)")
 
-# ─── PHASE 2: PREPROCESSING ───────────────────────────────────────────────────
 print("\n🔧 Phase 2 — Data Management & Preprocessing...")
 
 def preprocess_bene(df):
@@ -105,7 +103,6 @@ train_merged = all_claims.merge(bene,   on='BeneID', how='left')
 test_merged  = all_claims_u.merge(bene_u, on='BeneID', how='left')
 train_merged = train_merged.merge(train_labels, on='Provider', how='left')
 
-# ─── PHASE 4: FEATURE ENGINEERING ────────────────────────────────────────────
 print("\n⚙️  Phase 4 — Feature Engineering (Advanced Features)...")
 
 def engineer_provider_features(merged_df):
@@ -113,7 +110,6 @@ def engineer_provider_features(merged_df):
     merged_df['ClaimStartDt'] = pd.to_datetime(merged_df['ClaimStartDt'], errors='coerce')
     merged_df['ClaimEndDt']   = pd.to_datetime(merged_df['ClaimEndDt'],   errors='coerce')
     
-    # Pre-calculate IsSharedPatient before groupby
     patient_provider_count = merged_df.groupby('BeneID')['Provider'].nunique()
     shared = patient_provider_count[patient_provider_count > 3].index
     merged_df['IsSharedPatient'] = merged_df['BeneID'].isin(shared).astype(int)
@@ -121,14 +117,12 @@ def engineer_provider_features(merged_df):
     g = merged_df.groupby('Provider')
     feats = pd.DataFrame()
     
-    # 1. Volume
     feats['TotalClaims']            = g['ClaimID'].count()
     feats['InpatientClaims']        = (merged_df['ClaimType'] == 'Inpatient').astype(int).groupby(merged_df['Provider']).sum()
     feats['OutpatientClaims']       = (merged_df['ClaimType'] == 'Outpatient').astype(int).groupby(merged_df['Provider']).sum()
     feats['UniqueBeneficiaries']    = g['BeneID'].nunique()
     feats['UniqueAttendPhysicians'] = g['AttendingPhysician'].nunique()
     
-    # 2. Financial
     feats['AvgClaimAmt']            = g['InscClaimAmtReimbursed'].mean()
     feats['TotalReimbursement']     = g['InscClaimAmtReimbursed'].sum()
     feats['MaxClaimAmt']            = g['InscClaimAmtReimbursed'].max()
@@ -146,26 +140,22 @@ def engineer_provider_features(merged_df):
     is_high_cost = (merged_temp['InscClaimAmtReimbursed'] > merged_temp['Amt_90th']).astype(int)
     feats['HighCostClaimRatio']     = is_high_cost.groupby(merged_temp['Provider']).mean()
     
-    # 3. Temporal
     feats['AvgClaimDuration']       = g['ClaimDuration'].mean()
     feats['AvgHospitalStay']        = g['HospitalStay'].mean()
     feats['TotalHospitalDays']      = g['HospitalStay'].sum()
     
-    # 4. Medical coding
     feats['AvgNumDiagCodes']        = g['NumDiagCodes'].mean()
     feats['AvgNumProcCodes']        = g['NumProcCodes'].mean()
     feats['AvgUniqueDiagCodes']     = g['UniqueDiagCodes'].mean()
     feats['AvgUniqueProcCodes']     = g['UniqueProcCodes'].mean()
     feats['MaxDiagCodes']           = g['NumDiagCodes'].max()
     
-    # 5. Patient demographics
     feats['AvgPatientAge']          = g['Age'].mean()
     feats['MinPatientAge']          = g['Age'].min()
     feats['MaxPatientAge']          = g['Age'].max()
     feats['StdPatientAge']          = g['Age'].std().fillna(0)
     feats['PctDeadPatients']        = g['IsDead'].mean()
     
-    # 6. Chronic disease
     feats['AvgChronicCondCount']    = g['ChronicCondCount'].mean()
     feats['MaxChronicCondCount']    = g['ChronicCondCount'].max()
     feats['PctHighChronicCond']     = (merged_df['ChronicCondCount'] >= 4).astype(int).groupby(merged_df['Provider']).mean()
@@ -175,20 +165,17 @@ def engineer_provider_features(merged_df):
         if col in merged_df.columns:
             feats[f'Avg_{col}'] = g[col].mean()
             
-    # 7. Advanced Features Requested
     feats['ClaimAmt_Skewness'] = g['InscClaimAmtReimbursed'].skew().fillna(0)
     feats['ClaimAmt_Kurtosis'] = g['InscClaimAmtReimbursed'].apply(lambda x: x.kurtosis() if len(x) > 3 else 0).fillna(0)
     feats['ClaimAmt_CV'] = (g['InscClaimAmtReimbursed'].std() / (g['InscClaimAmtReimbursed'].mean() + 1e-9)).fillna(0)
     feats['SharedPatientRatio'] = g['IsSharedPatient'].mean()
     feats['PctMaxDiagCodes'] = g['NumDiagCodes'].apply(lambda x: (x == 10).mean())
     
-    # 8. Physician / behavioral
     bcc = merged_df.groupby(['Provider','BeneID'])['ClaimID'].count().reset_index()
     repeat   = bcc[bcc['ClaimID'] > 1].groupby('Provider')['BeneID'].count()
     all_bene = bcc.groupby('Provider')['BeneID'].count()
     feats['RepeatPatientRatio'] = (repeat / all_bene).fillna(0)
 
-    # 9. Missing Insurance features
     feats['AvgIPReimb']      = g['IPAnnualReimbursementAmt'].mean()
     feats['AvgOPReimb']      = g['OPAnnualReimbursementAmt'].mean()
     feats['AvgIPDeductible'] = g['IPAnnualDeductibleAmt'].mean()
@@ -196,7 +183,6 @@ def engineer_provider_features(merged_df):
     feats['AvgPartACovMonths'] = g['NoOfMonths_PartACov'].mean()
     feats['AvgPartBCovMonths'] = g['NoOfMonths_PartBCov'].mean()
     
-    # 10. Attending physician concentration and ratios
     feats['ClaimsPerPhysician'] = feats['TotalClaims'] / (feats['UniqueAttendPhysicians'] + 1)
     feats['BenePerPhysician']   = feats['UniqueBeneficiaries'] / (feats['UniqueAttendPhysicians'] + 1)
     feats['PhysicianConcentration'] = g['AttendingPhysician'].apply(
@@ -213,7 +199,6 @@ test_feats  = engineer_provider_features(test_merged)
 train_feats = train_feats.merge(train_labels, on='Provider')
 train_feats['FraudLabel'] = (train_feats['PotentialFraud'] == 'Yes').astype(int)
 
-# ─── PHASE 5: FEATURE SELECTION ───────────────────────────────────────────────
 print("\n🎯 Phase 5 — Feature Selection (MI + RF Importance)...")
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.ensemble import RandomForestClassifier as RFC
@@ -225,7 +210,6 @@ for c in feature_cols:
     if c not in test_feats.columns:
         test_feats[c] = 0
 
-# Split into 90% training and 10% holdout stratified by target
 train_cv_feats, holdout_feats = train_test_split(train_feats, test_size=0.10, stratify=train_feats['FraudLabel'], random_state=42)
 print(f"  Split data: CV Train={train_cv_feats.shape[0]:,} providers | Holdout={holdout_feats.shape[0]:,} providers")
 
@@ -256,7 +240,6 @@ X_test_sel     = test_feats[top_features].fillna(0).astype(float)
 
 print(f"  ✅ {len(top_features)} features selected")
 
-# ─── PHASE 6: MODEL TRAINING (GPU ACCELERATED & OPTUNA) ──────────────────────
 print("\n🤖 Phase 6 — GPU Model Training & Optuna Tuning...")
 
 import xgboost as xgb
@@ -344,30 +327,25 @@ from sklearn.model_selection import cross_val_predict
 print("  Generating Out-of-Fold predictions for Threshold Optimization...")
 oof_probs = cross_val_predict(stack_clf, X_train_cv_sel, y_train_cv, cv=5, method='predict_proba')[:, 1]
 
-# ─── PHASE 7: THRESHOLD OPTIMIZATION ─────────────────────────────────────────
 print("\n⚙️  Phase 7 — Threshold Optimization (F1 & F2-Score)...")
 precisions, recalls, thresholds = precision_recall_curve(y_train_cv, oof_probs)
 
-# F1 Optimization
 f1_scores = (2 * precisions * recalls) / (precisions + recalls + 1e-9)
 optimal_idx_f1 = np.argmax(f1_scores)
 optimal_threshold_f1 = thresholds[optimal_idx_f1] if optimal_idx_f1 < len(thresholds) else 0.5
 print(f"  ✅ Optimal F1 Threshold: {optimal_threshold_f1:.3f} | Best OOF F1: {f1_scores[optimal_idx_f1]:.4f}")
 
-# F2 Optimization
 f2_scores = (5 * precisions * recalls) / (4 * precisions + recalls + 1e-9)
 optimal_idx_f2 = np.argmax(f2_scores)
 optimal_threshold_f2 = thresholds[optimal_idx_f2] if optimal_idx_f2 < len(thresholds) else 0.5
 print(f"  ✅ Optimal F2 Threshold: {optimal_threshold_f2:.3f} | Best OOF F2: {f2_scores[optimal_idx_f2]:.4f}")
 
-# Train final model on 90% training data to predict on holdout
 print("\n  Training Stacking Classifier on 90% CV dataset...")
 stack_clf.fit(X_train_cv_sel, y_train_cv)
 
 print("  Predicting on Holdout set...")
 holdout_probs = stack_clf.predict_proba(X_holdout_sel)[:, 1]
 
-# Calculate holdout predictions
 holdout_pred_f1 = (holdout_probs >= optimal_threshold_f1).astype(int)
 holdout_pred_f2 = (holdout_probs >= optimal_threshold_f2).astype(int)
 
@@ -409,11 +387,9 @@ holdout_metrics_f2 = {
     'Accuracy': float(accuracy_score(y_holdout, holdout_pred_f2))
 }
 
-# Train final stack on all data (100% training data) for test predictions
 print("\n  Training Final Stacking Model on ALL (100%) training data...")
 stack_clf.fit(X_all_sel, y_all)
 
-# ─── PHASE 8: PREDICTIONS & ARTIFACTS ────────────────────────────────────────
 print("\n📤 Phase 8 — Generating Test Predictions & Saving...")
 
 test_proba = stack_clf.predict_proba(X_test_sel)[:, 1]
@@ -429,13 +405,11 @@ fraud_cnt = (submission['Predicted_Class'] == 'Yes').sum()
 submission.to_csv(os.path.join(BASE, "Tharun Kumar V_Submission.csv"), index=False)
 print(f"  ✅ Test providers flagged as fraud: {fraud_cnt}")
 
-# Save models
 with open(os.path.join(BASE, "best_model.pkl"), "wb") as f:
     pickle.dump(stack_clf, f)
 with open(os.path.join(BASE, "top_features.pkl"), "wb") as f:
     pickle.dump(top_features, f)
 
-# Save validation data predictions for Streamlit
 oof_df = pd.DataFrame({
     'Provider': train_cv_feats['Provider'],
     'Actual_Label': y_train_cv,
@@ -450,12 +424,10 @@ holdout_df = pd.DataFrame({
 })
 holdout_df.to_csv(os.path.join(BASE, "holdout_predictions.csv"), index=False)
 
-# Save the full provider feats for dynamic EDA
 provider_eda = train_feats.copy()
 provider_eda.to_csv(os.path.join(BASE, "provider_eda_summary.csv"), index=False)
 print("  ✅ Saved oof_predictions.csv, holdout_predictions.csv, and provider_eda_summary.csv")
 
-# Dynamic Feature Importance from final Random Forest selection
 rf_sel.fit(X_all_sel, y_all)
 importance_list = rf_sel.feature_importances_.tolist()
 feature_importance_dict = dict(zip(top_features, importance_list))

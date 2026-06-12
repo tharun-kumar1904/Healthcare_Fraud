@@ -13,7 +13,7 @@ from plotly.subplots import make_subplots
 import pickle
 import os
 import json
-import warnings# ── LOAD PIPELINE SUMMARY ──────────────────────────────────────────────────────
+import warnings
 best_model_name = "Stacking Ensemble (XGB, LGBM, CatBoost)"
 roc_auc_val = 0.9322
 f1_val = 0.6244
@@ -50,8 +50,6 @@ if os.path.exists("pipeline_summary.json"):
     except Exception as e:
         pass
 
-# ── PAGE CONFIG ───────────────────────────────────────────────────────────────
-# ── PAGE CONFIG ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Healthcare Fraud Detector Case Study",
     page_icon="🛡️",
@@ -59,7 +57,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── GLOBAL CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -164,7 +161,6 @@ div[data-testid="metric-container"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ── PLOTLY DARK TEMPLATE ──────────────────────────────────────────────────────
 PLOTLY_LAYOUT = dict(
     template="plotly_dark",
     paper_bgcolor="rgba(0,0,0,0)",
@@ -177,7 +173,6 @@ COLOR_LEGIT   = "#2ecc71"
 COLOR_PRIMARY = "#667eea"
 PALETTE       = ["#667eea","#e74c3c","#2ecc71","#f39c12","#a78bfa","#06b6d4"]
 
-# ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
     <div style='text-align:center;padding:1rem 0'>
@@ -205,7 +200,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(f"<div style='color:#8892b0;font-size:.75rem;text-align:center'>Healthcare Fraud Case Study<br><b>{best_model_name}</b><br>Threshold: {best_threshold:.3f}</div>", unsafe_allow_html=True)
 
-# ── LOAD ARTIFACTS ────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
     try:
@@ -267,9 +261,6 @@ oof_predictions = load_oof_predictions_v4()
 holdout_predictions = load_holdout_predictions_v4()
 provider_eda = load_provider_eda_v4()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 1 — OVERVIEW
-# ══════════════════════════════════════════════════════════════════════════════
 if page == "🏠  Executive Dashboard":
     st.markdown("""
     <div style='text-align:center;padding:2rem 0 1rem'>
@@ -284,7 +275,6 @@ if page == "🏠  Executive Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
-    # KPI Row
     test_fraud_rate_val = "14.5%"
     if submission is not None:
         try:
@@ -580,33 +570,25 @@ elif page == "🧠  Feature Intelligence":
     st.markdown('<div class="insight">Analyze feature category contributions, importances, correlation structures, and missing data profiles across the engineered feature set.</div>', unsafe_allow_html=True)
 
     feature_to_category = {
-        # Volume
         "TotalClaims": "Volume", "InpatientClaims": "Volume", "OutpatientClaims": "Volume",
         "UniqueBeneficiaries": "Volume", "UniqueAttendPhysicians": "Volume",
-        # Financial
         "AvgClaimAmt": "Financial", "TotalReimbursement": "Financial", "MaxClaimAmt": "Financial",
         "StdClaimAmt": "Financial", "AvgDeductible": "Financial", "TotalDeductible": "Financial",
         "ReimbursementPerClaim": "Financial", "DeductibleRatio": "Financial",
         "ReimbPerBeneficiary": "Financial", "HighCostClaimRatio": "Financial",
         "ClaimAmt_Skewness": "Financial", "ClaimAmt_Kurtosis": "Financial", "ClaimAmt_CV": "Financial",
-        # Temporal
         "AvgClaimDuration": "Temporal", "AvgHospitalStay": "Temporal", "TotalHospitalDays": "Temporal",
         "MonthlyClaimVariance": "Temporal", "PeakMonthClaims": "Temporal",
-        # Medical
         "AvgNumDiagCodes": "Medical", "AvgNumProcCodes": "Medical", "AvgUniqueDiagCodes": "Medical",
         "AvgUniqueProcCodes": "Medical", "MaxDiagCodes": "Medical", "PctMaxDiagCodes": "Medical",
-        # Behavioral
         "ClaimsPerBeneficiary": "Behavioral", "InpatientRatio": "Behavioral",
         "RepeatPatientRatio": "Behavioral", "PhysicianConcentration": "Behavioral",
         "ClaimsPerPhysician": "Behavioral",
-        # Demographic
         "BenePerPhysician": "Demographic", "AvgPatientAge": "Demographic", "MinPatientAge": "Demographic",
         "MaxPatientAge": "Demographic", "StdPatientAge": "Demographic", "PctDeadPatients": "Demographic",
         "SharedPatientRatio": "Demographic",
-        # Insurance
         "AvgIPReimb": "Insurance", "AvgOPReimb": "Insurance", "AvgIPDeductible": "Insurance",
         "AvgOPDeductible": "Insurance", "AvgPartACovMonths": "Insurance", "AvgPartBCovMonths": "Insurance",
-        # Chronic
         "AvgChronicCondCount": "Chronic", "MaxChronicCondCount": "Chronic", "PctHighChronicCond": "Chronic",
         "RenalDiseaseRatio": "Chronic", "Avg_ChronicCond_Alzheimer": "Chronic",
         "Avg_ChronicCond_Heartfailure": "Chronic", "Avg_ChronicCond_KidneyDisease": "Chronic",
@@ -614,7 +596,6 @@ elif page == "🧠  Feature Intelligence":
         "Avg_ChronicCond_stroke": "Chronic", "Avg_ChronicCond_Depression": "Chronic"
     }
 
-    # Load dynamic feature importances
     feature_importances_dict = {}
     if os.path.exists("pipeline_summary.json"):
         try:
@@ -697,7 +678,6 @@ elif page == "🧠  Feature Intelligence":
 
     st.markdown("---")
     
-    # Heatmap & Missing value profiles
     c_intel1, c_intel2 = st.columns(2)
     with c_intel1:
         st.markdown("#### Feature Correlation Matrix")
@@ -740,13 +720,11 @@ elif page == "🧠  Feature Intelligence":
     st.markdown('<div class="section-hdr">📋 All 53 Engineered Features</div>', unsafe_allow_html=True)
 
     all_features = [
-        # Volume (5)
         ("Volume","TotalClaims","Total number of claims filed"),
         ("Volume","InpatientClaims","Total inpatient claims"),
         ("Volume","OutpatientClaims","Total outpatient claims"),
         ("Volume","UniqueBeneficiaries","Unique patients served"),
         ("Volume","UniqueAttendPhysicians","Unique attending physicians"),
-        # Financial (9)
         ("Financial","AvgClaimAmt","Average reimbursement per claim"),
         ("Financial","TotalReimbursement","Total $ reimbursed — top fraud signal"),
         ("Financial","MaxClaimAmt","Maximum single claim amount"),
@@ -756,40 +734,34 @@ elif page == "🧠  Feature Intelligence":
         ("Financial","ReimbursementPerClaim","Reimbursement divided by claim count"),
         ("Financial","DeductibleRatio","Deductible / total reimbursement ratio"),
         ("Financial","ReimbPerBeneficiary","Reimbursement per unique patient"),
-        # Temporal (5)
         ("Temporal","AvgClaimDuration","Average days between claim start/end"),
         ("Temporal","AvgHospitalStay","Average inpatient stay duration"),
         ("Temporal","TotalHospitalDays","Total hospital days billed"),
         ("Temporal","MonthlyClaimVariance","Variance in monthly claim volume"),
         ("Temporal","PeakMonthClaims","Highest single-month claim count"),
-        # Medical (5)
         ("Medical","AvgNumDiagCodes","Average diagnosis codes per claim"),
         ("Medical","AvgNumProcCodes","Average procedure codes per claim"),
         ("Medical","AvgUniqueDiagCodes","Average unique diagnosis codes"),
         ("Medical","AvgUniqueProcCodes","Average unique procedure codes"),
         ("Medical","MaxDiagCodes","Maximum diagnosis codes on any claim"),
-        # Behavioral (6)
         ("Behavioral","ClaimsPerBeneficiary","Claims per unique patient"),
         ("Behavioral","InpatientRatio","Proportion of inpatient claims"),
         ("Behavioral","HighCostClaimRatio","Ratio of claims in top 10% cost"),
         ("Behavioral","RepeatPatientRatio","Fraction of patients with multiple claims"),
         ("Behavioral","PhysicianConcentration","Herfindahl index of physician billing"),
         ("Behavioral","ClaimsPerPhysician","Claims per attending physician"),
-        # Demographic (6)
         ("Demographic","BenePerPhysician","Beneficiaries per physician"),
         ("Demographic","AvgPatientAge","Average patient age"),
         ("Demographic","MinPatientAge","Youngest patient age"),
         ("Demographic","MaxPatientAge","Oldest patient age"),
         ("Demographic","StdPatientAge","Age spread across patients"),
         ("Demographic","PctDeadPatients","Fraction of deceased patients"),
-        # Insurance (6)
         ("Insurance","AvgIPReimb","Avg annual inpatient reimbursement"),
         ("Insurance","AvgOPReimb","Avg annual outpatient reimbursement"),
         ("Insurance","AvgIPDeductible","Avg inpatient deductible"),
         ("Insurance","AvgOPDeductible","Avg outpatient deductible"),
         ("Insurance","AvgPartACovMonths","Avg Medicare Part A coverage months"),
         ("Insurance","AvgPartBCovMonths","Avg Medicare Part B coverage months"),
-        # Chronic (11)
         ("Chronic","AvgChronicCondCount","Avg number of chronic conditions"),
         ("Chronic","MaxChronicCondCount","Max chronic conditions any patient"),
         ("Chronic","PctHighChronicCond","% patients with 4+ chronic conditions"),
@@ -828,12 +800,10 @@ elif page == "🔬  Model Performance":
 
     tab1, tab2 = st.tabs(["📊 Metrics Comparison", "📉 ROC & PR Curves"])
 
-    # Sidebar Threshold Slider
     st.sidebar.markdown("---")
     st.sidebar.markdown("<div style='color:#a8b2d8;font-size:.85rem;font-weight:700'>THRESHOLD CONTROL</div>", unsafe_allow_html=True)
     perf_th = st.sidebar.slider("Audit Threshold", 0.05, 0.95, float(best_threshold), 0.05, key="global_perf_th")
 
-    # Load dynamic predictions
     if oof_predictions is not None and holdout_predictions is not None:
         y_cv_true = oof_predictions['Actual_Label'].values
         y_cv_prob = oof_predictions['Predicted_Probability'].values
@@ -843,7 +813,6 @@ elif page == "🔬  Model Performance":
         y_ho_prob = holdout_predictions['Predicted_Probability'].values
         y_ho_pred = (y_ho_prob >= perf_th).astype(int)
 
-        # CV metrics
         fpr_cv, tpr_cv, _ = roc_curve(y_cv_true, y_cv_prob)
         cv_auc = auc(fpr_cv, tpr_cv)
         precision_cv_curve, recall_cv_curve, _ = precision_recall_curve(y_cv_true, y_cv_prob)
@@ -854,7 +823,6 @@ elif page == "🔬  Model Performance":
         cv_prec = precision_score(y_cv_true, y_cv_pred, zero_division=0)
         cv_acc = accuracy_score(y_cv_true, y_cv_pred)
 
-        # Holdout metrics
         fpr_ho, tpr_ho, _ = roc_curve(y_ho_true, y_ho_prob)
         ho_auc = auc(fpr_ho, tpr_ho)
         precision_ho_curve, recall_ho_curve, _ = precision_recall_curve(y_ho_true, y_ho_prob)
@@ -932,7 +900,6 @@ elif page == "🔬  Model Performance":
             else:
                 st.info("Train pipeline to display dynamic PR.")
 
-        # Confusion Matrices side-by-side
         st.markdown("#### Confusion Matrices (Dynamic)")
         if oof_predictions is not None and holdout_predictions is not None:
             cm_cv = confusion_matrix(y_cv_true, y_cv_pred)
@@ -1045,7 +1012,6 @@ elif page == "🤖  Fraud Prediction Center":
                 st.markdown("### 🔍 Why are Providers Flagged? (Interactive Explainability)")
                 st.markdown('<div class="insight">Select any training provider to inspect their specific fraud risk drivers. The model compares their metrics directly to peer groups to identify anomalies.</div>', unsafe_allow_html=True)
                 
-                # Combine predictions to get probabilities
                 oof_preds = load_oof_predictions_v4()
                 ho_preds = load_holdout_predictions_v4()
                 
@@ -1056,7 +1022,6 @@ elif page == "🤖  Fraud Prediction Center":
                     provider_df = provider_eda.copy()
                     provider_df['Predicted_Probability'] = provider_df['FraudLabel'] * 0.88 + 0.06
                 
-                # Dropdown
                 flagged_only = st.checkbox("Show flagged providers only (True Fraud Label)", value=True, key="inspect_flagged_only")
                 if flagged_only:
                     inspect_list = sorted(provider_df[provider_df['FraudLabel'] == 1]['Provider'].unique())
@@ -1085,10 +1050,8 @@ elif page == "🤖  Fraud Prediction Center":
                         
                     with c_det2:
                         st.markdown("#### Primary Risk Drivers & Peer Benchmarking")
-                        # Legit means
                         legit_df = provider_df[provider_df['FraudLabel'] == 0]
                         
-                        # Peer grouping based on claims volume
                         p_claims = prov_row['TotalClaims']
                         if p_claims < 50:
                             peer_label = "Small-volume Providers (<50 claims)"
@@ -1108,43 +1071,36 @@ elif page == "🤖  Fraud Prediction Center":
                         legit_means = legit_peer_df.mean(numeric_only=True)
                         
                         drivers = []
-                        # 1. Total Reimbursement
                         r_val = prov_row['TotalReimbursement']
                         l_val = legit_means['TotalReimbursement']
                         if r_val > l_val:
                             drivers.append(("Total Reimbursement", f"${r_val:,.2f}", f"${l_val:,.2f}", r_val/max(l_val, 1), "💰 Extremely high billing value relative to peer benchmark"))
                             
-                        # 2. Total Hospital Days
                         r_stay = prov_row['TotalHospitalDays']
                         l_stay = legit_means['TotalHospitalDays']
                         if r_stay > l_stay:
                             drivers.append(("Total Hospital Days", f"{r_stay:.1f} days", f"{l_stay:.1f} days", r_stay/max(l_stay, 0.1), "🏥 Outlier inpatient day volume relative to peer benchmark (ghost billing signature)"))
                             
-                        # 3. Claims Per Patient
                         r_cpp = prov_row['ClaimsPerBeneficiary']
                         l_cpp = legit_means['ClaimsPerBeneficiary']
                         if r_cpp > l_cpp:
                             drivers.append(("Claims Per Patient", f"{r_cpp:.2f}", f"{l_cpp:.2f}", r_cpp/max(l_cpp, 0.1), "🔄 High billing frequency per patient relative to peer benchmark"))
                             
-                        # 4. Chronic Conditions count
                         r_cc = prov_row['AvgChronicCondCount']
                         l_cc = legit_means['AvgChronicCondCount']
                         if r_cc > l_cc:
                             drivers.append(("Avg Chronic Conditions", f"{r_cc:.2f}", f"{l_cc:.2f}", r_cc/max(l_cc, 0.1), "🧬 Upcoded chronic conditions to justify high diagnostic complexity"))
                             
-                        # 5. Repeat Patient Ratio
                         r_rpr = prov_row['RepeatPatientRatio']
                         l_rpr = legit_means['RepeatPatientRatio']
                         if r_rpr > l_rpr:
                             drivers.append(("Repeat Patient Ratio", f"{r_rpr:.1%}", f"{l_rpr:.1%}", r_rpr/max(l_rpr, 0.01), "🔄 Patient concentration anomalies across billing events"))
 
-                        # 6. Inpatient Claims Ratio
                         r_ipr = prov_row['InpatientRatio']
                         l_ipr = legit_means['InpatientRatio']
                         if r_ipr > l_ipr:
                             drivers.append(("Inpatient claims ratio", f"{r_ipr:.1%}", f"{l_ipr:.1%}", r_ipr/max(l_ipr, 0.01), "📈 Excess inpatient billing mix relative to peer benchmark baseline"))
 
-                        # Sort drivers by multiplier
                         drivers = sorted(drivers, key=lambda x: x[3], reverse=True)
                         
                         if drivers:
@@ -1286,15 +1242,12 @@ elif page == "💼  Business ROI":
         y_true = oof_predictions['Actual_Label'].values
         y_prob = oof_predictions['Predicted_Probability'].values
         
-        # Financial Sliders
         c1, c2 = st.columns(2)
         audit_cost = c1.slider("Average Cost of Audit ($)", 100, 5000, 1000, 100)
         fraud_val = c2.slider("Average Value of Fraud Recovered ($)", 1000, 50000, 15000, 500)
         
-        # Threshold selector
         th = st.slider("Probability Decision Cutoff", 0.05, 0.95, float(best_threshold), 0.05, key="roi_threshold_slider")
         
-        # Calculate ROI at current threshold
         preds = (y_prob >= th).astype(int)
         tp = int(sum((preds == 1) & (y_true == 1)))
         fp = int(sum((preds == 1) & (y_true == 0)))
@@ -1306,7 +1259,6 @@ elif page == "💼  Business ROI":
         net_savings = total_recovery - total_audit_cost
         lost_fraud = fn * fraud_val
         
-        # Display KPIs
         k1, k2, k3, k4 = st.columns(4)
         k1.markdown(f"""
         <div class="kpi-card" style="border-color: rgba(102,126,234,0.5)">
@@ -1338,7 +1290,6 @@ elif page == "💼  Business ROI":
         
         st.markdown("")
         
-        # Plot Net Savings vs Threshold curve
         ths = np.arange(0.05, 0.96, 0.05)
         net_savings_curve = []
         for t in ths:
