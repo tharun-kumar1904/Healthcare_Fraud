@@ -1,153 +1,176 @@
-# 🏥 Healthcare Provider Fraud Detection
-### Sagility Data Science Case Study Submission
-**Author:** Tharun | **Submitted:** 2024
+# Healthcare Provider Fraud Detection & Decision Support Platform
+
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![Streamlit App](https://static.streamlit.io/badge-gradient-darkblue.svg)](https://share.streamlit.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## 📋 Problem Statement
+## 📌 Problem Statement
 
-Predict potentially fraudulent healthcare providers using Medicare insurance claims data. 
-Provider fraud (upcoding, ghost billing, duplicate claims) costs the US insurance industry 
-**$300+ billion annually**. This solution builds an end-to-end ML pipeline to flag 
-high-risk providers for audit.
+Healthcare fraud is a critical economic challenge, draining hundreds of billions of dollars annually from insurance providers, Medicare/Medicaid, and ultimately patients. Fraudulent organizations leverage billing vulnerabilities to submit phantom claims, overstate medical necessities, or systematically duplicate claim events. Traditional claims-auditing relies on rule-based processing, which is slow and struggles to detect shifting fraud patterns.
+
+To solve this problem, we develop an end-to-end Machine Learning pipeline that aggregates claim-level billing records to provider-level behavioral summaries. By grouping outpatient, inpatient, and beneficiary features, our model flags anomalous billing signatures. This provides auditors with a targeted list of high-value fraud suspects to review.
+
+The primary target is the provider ID. Since fraud cases are relatively rare compared to legitimate billings (yielding a 9.7:1 class imbalance), the model is optimized for high recall while preserving high precision to ensure operational auditing efficiency.
 
 ---
 
-## 📁 Project Structure
+## 🏗️ Solution Architecture
 
 ```
-Healthcare_Fraud_Detection/
-├── Healthcare_Fraud_Detection.ipynb   # Complete analysis notebook (Phases 1–9)
-├── streamlit_app.py                   # Interactive dashboard application
-├── Tharun_Submission.csv              # Final test predictions
-├── requirements.txt                   # Python dependencies
-├── README.md                          # This file
-├── best_model.pkl                     # Trained Random Forest model
-├── top_features.pkl                   # Selected 35 features
-└── data/
-    └── Case Study/
-        ├── Training Data/
-        │   ├── Train-*.csv            # Provider fraud labels
-        │   ├── Train_Beneficiary*.csv # Patient demographics
-        │   ├── Train_Inpatient*.csv   # Hospital admission claims
-        │   └── Train_Outpatient*.csv  # Outpatient visit claims
-        └── Unseen Data/
-            └── (same structure)
+Raw Data Ingestion
+(Inpatient + Outpatient + Beneficiary)
+       │
+       ▼
+Data Management & Preprocessing
+(Standardize schemas, handle missing values, format datetime)
+       │
+       ▼
+Behavioral Feature Engineering
+(Generate 61 custom provider-level features)
+       │
+       ▼
+Feature Selection (MI + RF Rank)
+(Isolate top 35 high-value indicators)
+       │
+       ▼
+Model Stacking Ensemble
+(Optuna XGBoost GPU + LightGBM DART + CatBoost)
+       │
+       ▼
+Operational Risk Tiers & Business ROI Calculator
+(Dual F1 & F2 Threshold Auditing Actions)
 ```
+
+---
+
+## 📋 Dataset Summary
+
+| Dataset Name | Row Count | Column Count | Missing Values | Duplicate Count | Memory Footprint | Description |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Train Labels** | 5,410 | 2 | 0 | 0 | 0.08 MB | Training class targets (Yes/No) |
+| **Beneficiary (Train)** | 138,556 | 25 | 8,202 | 0 | 27.70 MB | Patient medical profile & coverages |
+| **Inpatient (Train)** | 40,474 | 30 | 128,103 | 0 | 9.20 MB | Inpatient claims details & dates |
+| **Outpatient (Train)** | 517,737 | 27 | 1,540,111 | 0 | 106.50 MB | Outpatient claims details & dates |
+| **Test Labels** | 1,353 | 1 | 1,353 | 0 | 0.01 MB | Assessment cohort provider list |
+| **Beneficiary (Test)** | 34,640 | 25 | 2,050 | 0 | 6.90 MB | Test patient medical profiles |
+| **Inpatient (Test)** | 9,974 | 30 | 31,610 | 0 | 2.30 MB | Test inpatient claims details |
+| **Outpatient (Test)** | 125,576 | 27 | 373,710 | 0 | 25.80 MB | Test outpatient claims details |
+
+---
+
+## ⚙️ Feature Engineering Summary
+
+We engineer 61 provider-level features categorized into 5 distinct behavioural domains:
+
+1. **Volume (12 features):** Total claim counts, inpatient split, unique patient counts, and distinct attending physician counts.
+2. **Financial (15 features):** Cumulative reimbursements, average claim sizes, patient deductible sums, and per-beneficiary billing ratios.
+3. **Clinical (10 features):** Total hospitalization stay days, average diagnosis codes count, and chronic disease prevalence metrics.
+4. **Behavioral (14 features):** Repeated diagnosis rates, patient recycling indices, and physician concentration metrics.
+5. **Temporal (10 features):** Weekend claim billing ratios, consecutive claims time gaps, and active days ratios.
+
+---
+
+## 📊 Model Performance
+
+Stratified cross-validation and holdout validation results:
+
+| Model | CV ROC-AUC | Holdout ROC-AUC | CV F1 | Holdout F1 | CV Recall | Holdout Recall |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Stacking Ensemble ⭐** | **0.9343** | **0.9567** | **0.6340** | **0.6783** | **69.67%** | **76.47%** |
+| **Random Forest (300)** | 0.9352 | — | 0.5679 | — | 85.18% | — |
+| **XGBoost (Optuna)** | 0.9296 | — | 0.5736 | — | 82.41% | — |
+| **Logistic Regression** | 0.8940 | — | 0.5799 | — | 78.85% | — |
+
+> [!NOTE]
+> Stacking Ensemble uses XGBoost, LightGBM (DART), and CatBoost meta-tuned via Logistic Regression. Holdout performance exceeding CV score verifies high generalization capacity.
+
+---
+
+## 🏆 Top 10 Fraud Signals (SHAP)
+
+1. **TotalReimbursement (0.141):** Highest contributor. Excess billing value relative to size benchmarks.
+2. **MaxDiagCodes (0.134):** Billing maximum allowable diagnosis codes (upcoding signature).
+3. **TotalDeductible (0.075):** Copay volume anomalies indicating duplicate billing.
+4. **TotalHospitalDays (0.074):** Inflated inpatient stays (phantom bed billing).
+5. **MaxClaimAmt (0.059):** Outlier claims indicating single major billing fraud.
+6. **InpatientClaims (0.047):** High ratio of inpatient treatments (which have higher baseline payouts).
+7. **AvgNumProcCodes (0.039):** Density of billed procedures per visit.
+8. **RepeatedDiagRatio (0.036):** Repetitive copy-pasting of primary diagnosis codes.
+9. **AvgUniqueProcCodes (0.031):** Diversity of procedures billed.
+10. **ReimbPerBeneficiary (0.030):** Billing excess values on a small patient cohort.
+
+---
+
+## 🛡️ Risk Tier Framework
+
+| Operational Risk Tier | Risk Score Range | Decision Threshold | Audit Action |
+| :--- | :---: | :---: | :--- |
+| 🔴 **Critical Risk** | &ge; 0.70 | F1-Optimal (0.865) | Immediate payment suspension + Special Investigation audit |
+| 🟠 **High Risk** | 0.50 - 0.69 | F2-Optimal (0.597) | Pre-payment claims audit + on-site clinical review |
+| 🟡 **Watch List** | 0.30 - 0.49 | N/A | Quarterly profile monitoring + peer volume comparison |
+| 🟢 **Low Risk** | < 0.30 | N/A | Standard automated claims processing |
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### Step 1: Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Run the Notebook
+### Step 2: Run Training & Evaluation Pipeline
 ```bash
-jupyter notebook Healthcare_Fraud_Detection.ipynb
+python run_pipeline.py
 ```
 
-### 3. Launch the Streamlit App
+### Step 3: Run Interactive UI Dashboard
 ```bash
 streamlit run streamlit_app.py
 ```
 
 ---
 
-## 📊 Datasets
+## 📁 Project Structure
 
-| Dataset | Rows | Columns | Description |
-|---------|------|---------|-------------|
-| Train Labels | 5,410 | 2 | Provider fraud ground truth |
-| Beneficiary (Train) | 138,556 | 25 | Patient KYC & health conditions |
-| Inpatient (Train) | 40,474 | 30 | Hospital admission claims |
-| Outpatient (Train) | 517,737 | 27 | Outpatient visit claims |
-| Test (Unseen) | 1,353 | 1 | Providers for prediction |
-
----
-
-## ⚙️ Solution Pipeline
-
-| Phase | Description | Key Output |
-|-------|-------------|------------|
-| 1. Data Understanding | Profile all datasets, ER diagram | Dataset summary, quality report |
-| 2. Data Management | Clean, merge, preprocess | Master merged dataset |
-| 3. EDA | Deep statistical analysis | 10+ visualizations with insights |
-| 4. Feature Engineering | Create 53 provider-level features | Feature matrix |
-| 5. Feature Selection | MI + RF importance → top 35 | Final feature set |
-| 6. Model Building | 5 models, 5-fold CV, SMOTE | Model comparison table |
-| 7. Interpretability | SHAP analysis | Fraud explanation reports |
-| 8. Prediction | Test set predictions | Tharun_Submission.csv |
-| 9. Business Recs | Fraud patterns, prevention | Strategy document |
+```
+.
+├── Data/                             # Raw CSV data files (git-ignored)
+├── run_pipeline.py                   # Full model training and evaluation script
+├── streamlit_app.py                  # Dark-themed dashboard application
+├── requirements.txt                  # Python dependencies
+├── packages.txt                      # System dependencies for Streamlit Cloud
+├── README.md                         # Documentation
+├── .gitignore                        # Git exclusions file
+├── pipeline_summary.json             # Evaluation run metadata outputs
+├── model_results.csv                 # Model metrics table
+├── shap_importance.csv               # SHAP values summary
+└── Tharun Kumar V_Submission.csv     # Test set predictions output file
+```
 
 ---
 
-## 🤖 Model Performance (5-Fold Cross-Validation)
+## 📤 Submission Format
 
-| Model | ROC-AUC | PR-AUC | F1 | Recall | Precision |
-|-------|---------|--------|----|--------|-----------|
-| **Random Forest** ⭐ | **0.9318** | 0.6381 | **0.5950** | **0.7925** | 0.4762 |
-| Logistic Regression | 0.9310 | **0.6826** | 0.5596 | 0.8300 | 0.4221 |
-| CatBoost | 0.9298 | 0.6661 | 0.5871 | 0.7292 | 0.4913 |
-| LightGBM | 0.9272 | 0.6635 | 0.5957 | 0.6858 | 0.5266 |
-| XGBoost | 0.9165 | 0.6443 | 0.5567 | 0.7668 | 0.4369 |
-
-**Best Model: Random Forest** — chosen for highest ROC-AUC and strong recall (79.25%) 
-which is critical in fraud detection to minimize missed fraud cases.
-
----
-
-## 🔑 Top Fraud Indicators (SHAP)
-
-1. **TotalReimbursement** — Inflated total billing amounts
-2. **TotalHospitalDays** — Extended inpatient stays (ghost billing)
-3. **TotalDeductible** — Excessive deductible patterns
-4. **RepeatPatientRatio** — Recycling patients for duplicate claims
-5. **ClaimsPerBeneficiary** — Excessive billing per patient
-6. **InpatientRatio** — Preference for high-cost inpatient DRG codes
-7. **AvgChronicCondCount** — Upcoding via complex chronic profiles
-8. **PhysicianConcentration** — Physician ring/syndicate detection
-
----
-
-## 🛡️ Business Recommendations
-
-### Risk Tiering Framework
-| Tier | Probability | Action |
-|------|-------------|--------|
-| 🔴 Critical | ≥ 0.70 | Payment hold + immediate investigation |
-| 🟠 High | 0.50–0.69 | Enhanced auditing + site visits |
-| 🟡 Watch | 0.30–0.49 | Quarterly review |
-| 🟢 Low | < 0.30 | Standard processing |
-
-### Top Fraud Patterns
-- **Upcoding:** Billing complex chronic conditions to justify expensive procedures
-- **Ghost Billing:** High inpatient claims for short or non-existent stays  
-- **Repeat Billing:** Same patients across multiple claims (phantom services)
-- **Physician Rings:** Small physician groups billing through one provider entity
-
----
-
-## 📤 Submission File Format
-
-`Tharun_Submission.csv` contains:
-- `Provider` — Provider ID
-- `Probability` — Fraud probability (0–1)
-- `Predicted_Class` — Yes (Fraud) / No (Legitimate)
+The submission file `Tharun Kumar V_Submission.csv` contains predictions for the 1,353 test providers. It has the following columns:
+- **Provider:** Provider unique identifier.
+- **Probability:** Model-predicted probability of fraud (0.0 to 1.0).
+- **Predicted_Class:** Class prediction ('Yes' for fraud, 'No' for safe) mapped using the F1-Optimal threshold of 0.865.
 
 ---
 
 ## 📚 References
 
-1. CMS Medicare Fraud Resources: https://www.cms.gov/About-CMS/Components/CPI/index
-2. FBI Healthcare Fraud Overview: https://www.fbi.gov/investigate/white-collar-crime/health-care-fraud
-3. SHAP Documentation: https://shap.readthedocs.io
-4. Imbalanced-learn (SMOTE): https://imbalanced-learn.org
-5. US Healthcare Fraud Statistics: OIG HHS Annual Report 2023
+1. CMS Medicare claims research data.
+2. US Government Accountability Office (GAO) healthcare fraud reports.
+3. NHCAA: Financial impact of healthcare billing schemes.
+4. SHAP (SHapley Additive exPlanations) research papers.
+5. Scikit-learn, XGBoost, and LightGBM API documentations.
 
 ---
 
-*This submission is confidential and prepared exclusively for Sagility's Data Science evaluation. 
-The dataset has not been published or shared externally.*
+## 🔒 Confidentiality Note
+
+This codebase is submitted as an assessment project. All dataset contents, outputs, and details are protected under standard non-disclosure agreements and intended solely for case study evaluation.

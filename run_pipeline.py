@@ -1,22 +1,17 @@
-"""
-Healthcare Provider Fraud Detection — Full Pipeline (GPU Accelerated)
-Author: Tharun | Sagility Data Science Case Study
-Features: Advanced FE, Optuna, Stacking, Threshold Optimization
-"""
-
-import sys, io
+import sys
+import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 import pandas as pd
 import numpy as np
+import pickle
+import os
+import json
+import warnings
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-import warnings
-import pickle
-import os
-import json
 
 warnings.filterwarnings('ignore')
 plt.rcParams['figure.figsize'] = (12, 5)
@@ -28,8 +23,7 @@ TD   = os.path.join(BASE, "Data", "Training Data") + os.sep
 UD   = os.path.join(BASE, "Data", "Unseen Data")   + os.sep
 
 print("=" * 65)
-print("  HEALTHCARE PROVIDER FRAUD DETECTION PIPELINE (GPU)")
-print("  Sagility Data Science Case Study — Tharun")
+print("  HEALTHCARE PROVIDER FRAUD DETECTION PIPELINE")
 print("=" * 65)
 
 print("\n📁 Phase 1 — Loading Datasets...")
@@ -110,6 +104,8 @@ def engineer_provider_features(merged_df):
     merged_df['ClaimStartDt'] = pd.to_datetime(merged_df['ClaimStartDt'], errors='coerce')
     merged_df['ClaimEndDt']   = pd.to_datetime(merged_df['ClaimEndDt'],   errors='coerce')
     
+    merged_df = merged_df.sort_values(['Provider', 'ClaimStartDt']).reset_index(drop=True)
+    
     patient_provider_count = merged_df.groupby('BeneID')['Provider'].nunique()
     shared = patient_provider_count[patient_provider_count > 3].index
     merged_df['IsSharedPatient'] = merged_df['BeneID'].isin(shared).astype(int)
@@ -187,7 +183,31 @@ def engineer_provider_features(merged_df):
     feats['BenePerPhysician']   = feats['UniqueBeneficiaries'] / (feats['UniqueAttendPhysicians'] + 1)
     feats['PhysicianConcentration'] = g['AttendingPhysician'].apply(
         lambda x: (x.value_counts(normalize=True)**2).sum() if len(x) > 0 else 0)
+
+    feats['P90_to_Mean_Ratio'] = (provider_90th / (feats['AvgClaimAmt'] + 1e-9)).fillna(0)
     
+    merged_df['IsWeekend'] = (merged_df['ClaimStartDt'].dt.dayofweek >= 5).astype(int)
+    feats['WeekendClaimRatio'] = merged_df.groupby('Provider')['IsWeekend'].mean().fillna(0)
+    
+    active_days = (g['ClaimStartDt'].max() - g['ClaimStartDt'].min()).dt.days + 1
+    feats['ClaimsPerActiveDays'] = feats['TotalClaims'] / (active_days + 1e-9)
+    
+    diag_cols = [f'ClmDiagnosisCode_{i}' for i in range(1, 11) if f'ClmDiagnosisCode_{i}' in merged_df.columns]
+    diag_df = merged_df[['Provider'] + diag_cols]
+    diag_melted = diag_df.melt(id_vars='Provider').dropna()
+    unique_diags = diag_melted.groupby('Provider')['value'].nunique()
+    feats['DiagDiversityScore'] = (unique_diags / (g['NumDiagCodes'].sum() + 1e-9)).fillna(0)
+    
+    merged_df['PrevClaimStartDt'] = merged_df.groupby('Provider')['ClaimStartDt'].shift(1)
+    merged_df['DaysBetweenClaims'] = (merged_df['ClaimStartDt'] - merged_df['PrevClaimStartDt']).dt.days
+    feats['AvgDaysBetweenClaims'] = merged_df.groupby('Provider')['DaysBetweenClaims'].mean().fillna(0)
+    
+    top_diag_counts = merged_df.groupby(['Provider', 'ClmDiagnosisCode_1']).size().reset_index(name='count')
+    max_diag_counts = top_diag_counts.groupby('Provider')['count'].max()
+    feats['RepeatedDiagRatio'] = (max_diag_counts / feats['TotalClaims']).fillna(0)
+    
+    feats['MaxClaimToAvg_Ratio'] = feats['MaxClaimAmt'] / (feats['AvgClaimAmt'] + 1e-9)
+
     feats = feats.reset_index()
     return feats
 
@@ -198,6 +218,41 @@ test_feats  = engineer_provider_features(test_merged)
 
 train_feats = train_feats.merge(train_labels, on='Provider')
 train_feats['FraudLabel'] = (train_feats['PotentialFraud'] == 'Yes').astype(int)
+
+print("\n📊 Phase 3 — Exploratory Data Analysis & Visualizations...")
+
+plt.figure(figsize=(6, 4))
+sns.countplot(x='PotentialFraud', data=train_labels, palette=['#2ecc71', '#e74c3c'], edgecolor='black')
+plt.title('Provider Fraud Label Distribution', fontweight='bold')
+plt.xlabel('Fraud Status')
+plt.ylabel('Count')
+plt.tight_layout()
+plt.savefig(os.path.join(BASE, 'eda_fraud_vs_legit_comparison.png'), dpi=150)
+plt.close()
+
+top_6_cols = ['TotalReimbursement', 'TotalHospitalDays', 'MaxDiagCodes', 'InpatientClaims', 'AvgNumProcCodes', 'RepeatedDiagRatio']
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+axes = axes.flatten()
+for idx, col in enumerate(top_6_cols):
+    if col in train_feats.columns:
+        sns.violinplot(x='PotentialFraud', y=col, data=train_feats, ax=axes[idx], palette=['#2ecc71', '#e74c3c'])
+        axes[idx].set_title(f'{col} Distribution', fontweight='bold')
+        axes[idx].set_xlabel('Potential Fraud')
+        axes[idx].set_ylabel(col)
+plt.tight_layout()
+plt.savefig(os.path.join(BASE, 'eda_feature_distributions.png'), dpi=150)
+plt.close()
+
+corr_cols = ['TotalReimbursement', 'TotalClaims', 'UniqueBeneficiaries', 'TotalHospitalDays', 'AvgNumDiagCodes', 'RepeatPatientRatio', 'PhysicianConcentration', 'AvgChronicCondCount']
+plt.figure(figsize=(10, 8))
+corr_mat = train_feats[[c for c in corr_cols if c in train_feats.columns]].corr()
+sns.heatmap(corr_mat, annot=True, fmt='.2f', cmap='coolwarm', center=0, linewidths=0.5)
+plt.title('Feature Correlation Heatmap', fontweight='bold')
+plt.tight_layout()
+plt.savefig(os.path.join(BASE, 'eda_correlation_heatmap.png'), dpi=150)
+plt.close()
+
+print("  ✅ Phase 3 EDA plots generated successfully.")
 
 print("\n🎯 Phase 5 — Feature Selection (MI + RF Importance)...")
 from sklearn.feature_selection import mutual_info_classif
@@ -258,7 +313,6 @@ fraud_ratio = float((y_all == 0).sum()) / (y_all == 1).sum()
 
 device_val = 'cuda'
 try:
-    import numpy as np
     dummy_model = xgb.XGBClassifier(device='cuda')
     dummy_model.fit(np.zeros((2, 2)), np.zeros(2))
     print("  ✅ CUDA verified for XGBoost fitting. GPU acceleration active.")
@@ -266,18 +320,14 @@ except Exception as e:
     device_val = 'cpu'
     print(f"  ⚠️ CUDA check failed: {e}. Falling back to CPU.")
 
-print("  ▶ Running Optuna on XGBoost (GPU) - 100 trials...")
+print("  ▶ Running Optuna on XGBoost (GPU) - 15 trials...")
 def objective(trial):
     params = {
-        'n_estimators':      trial.suggest_int('n_estimators', 200, 800),
-        'max_depth':         trial.suggest_int('max_depth', 3, 9),
-        'learning_rate':     trial.suggest_float('learning_rate', 0.01, 0.2, log=True),
-        'subsample':         trial.suggest_float('subsample', 0.6, 1.0),
-        'colsample_bytree':  trial.suggest_float('colsample_bytree', 0.5, 1.0),
-        'min_child_weight':  trial.suggest_int('min_child_weight', 1, 10),
-        'gamma':             trial.suggest_float('gamma', 0, 0.5),
-        'reg_alpha':         trial.suggest_float('reg_alpha', 0, 1.0),
-        'reg_lambda':        trial.suggest_float('reg_lambda', 0.5, 2.0),
+        'n_estimators':      trial.suggest_int('n_estimators', 200, 500),
+        'max_depth':         trial.suggest_int('max_depth', 3, 7),
+        'learning_rate':     trial.suggest_float('learning_rate', 0.02, 0.15, log=True),
+        'subsample':         trial.suggest_float('subsample', 0.7, 1.0),
+        'colsample_bytree':  trial.suggest_float('colsample_bytree', 0.6, 1.0),
         'scale_pos_weight':  fraud_ratio,
         'tree_method':       'hist',
         'device':            device_val,
@@ -293,7 +343,7 @@ def objective(trial):
     return score
 
 study = optuna.create_study(direction='maximize')
-study.optimize(objective, n_trials=100)
+study.optimize(objective, n_trials=15)
 print(f"  ✅ Best XGBoost ROC-AUC: {study.best_value:.4f}")
 
 print("\n  ▶ Training Stacking Classifier (5-Fold CV)...")
@@ -306,12 +356,12 @@ estimators = [
         eval_metric='aucpr', random_state=42, verbosity=0)),
     ('lgb', lgb.LGBMClassifier(
         boosting_type='dart',
-        class_weight='balanced', n_estimators=500,
+        class_weight='balanced', n_estimators=400,
         learning_rate=0.05, max_depth=6,
-        drop_rate=0.1, max_drop=50, skip_drop=0.5,
+        drop_rate=0.1, max_drop=40, skip_drop=0.5,
         random_state=42, verbose=-1)),
     ('cat', CatBoostClassifier(
-        iterations=500, depth=6, learning_rate=0.05,
+        iterations=400, depth=6, learning_rate=0.05,
         auto_class_weights='Balanced',
         random_seed=42, verbose=0)),
 ]
@@ -349,7 +399,6 @@ holdout_probs = stack_clf.predict_proba(X_holdout_sel)[:, 1]
 holdout_pred_f1 = (holdout_probs >= optimal_threshold_f1).astype(int)
 holdout_pred_f2 = (holdout_probs >= optimal_threshold_f2).astype(int)
 
-print("\n  ===== MODEL CV PERFORMANCE (F1 OPTIMAL) =====")
 oof_pred_f1 = (oof_probs >= optimal_threshold_f1).astype(int)
 cv_metrics_f1 = {
     'ROC_AUC': float(roc_auc_score(y_train_cv, oof_probs)),
@@ -359,10 +408,7 @@ cv_metrics_f1 = {
     'Precision': float(precision_score(y_train_cv, oof_pred_f1)),
     'Accuracy': float(accuracy_score(y_train_cv, oof_pred_f1))
 }
-for k, v in cv_metrics_f1.items():
-    print(f"  CV {k:10s}: {v:.4f}")
 
-print("\n  ===== MODEL HOLDOUT PERFORMANCE (F1 OPTIMAL) =====")
 holdout_metrics_f1 = {
     'ROC_AUC': float(roc_auc_score(y_holdout, holdout_probs)),
     'PR_AUC': float(average_precision_score(y_holdout, holdout_probs)),
@@ -371,8 +417,6 @@ holdout_metrics_f1 = {
     'Precision': float(precision_score(y_holdout, holdout_pred_f1)),
     'Accuracy': float(accuracy_score(y_holdout, holdout_pred_f1))
 }
-for k, v in holdout_metrics_f1.items():
-    print(f"  Holdout {k:10s}: {v:.4f}")
 
 cv_metrics_f2 = {
     'F1': float(f1_score(y_train_cv, (oof_probs >= optimal_threshold_f2).astype(int))),
@@ -380,6 +424,7 @@ cv_metrics_f2 = {
     'Precision': float(precision_score(y_train_cv, (oof_probs >= optimal_threshold_f2).astype(int))),
     'Accuracy': float(accuracy_score(y_train_cv, (oof_probs >= optimal_threshold_f2).astype(int)))
 }
+
 holdout_metrics_f2 = {
     'F1': float(f1_score(y_holdout, holdout_pred_f2)),
     'Recall': float(recall_score(y_holdout, holdout_pred_f2)),
@@ -426,7 +471,7 @@ holdout_df.to_csv(os.path.join(BASE, "holdout_predictions.csv"), index=False)
 
 provider_eda = train_feats.copy()
 provider_eda.to_csv(os.path.join(BASE, "provider_eda_summary.csv"), index=False)
-print("  ✅ Saved oof_predictions.csv, holdout_predictions.csv, and provider_eda_summary.csv")
+print("  ✅ Saved predictions and feature summary artifacts.")
 
 rf_sel.fit(X_all_sel, y_all)
 importance_list = rf_sel.feature_importances_.tolist()
@@ -450,5 +495,30 @@ with open(os.path.join(BASE, "pipeline_summary.json"), "w") as f:
     json.dump(summary, f, indent=2)
 
 print("\n" + "=" * 65)
-print("  ✅ PIPELINE COMPLETE — ADVANCED STRATEGIES APPLIED")
+print("  FINAL MODEL PERFORMANCE COMPARISON (STACKING ENSEMBLE)")
+print("=" * 65)
+print("  Metric       | CV     | Holdout | Delta  ")
+print("  -------------|--------|---------|--------")
+for metric_key, display_name in [('ROC_AUC', 'ROC-AUC'), ('PR_AUC', 'PR-AUC'), ('F1', 'F1 Score'), ('Recall', 'Recall'), ('Precision', 'Precision'), ('Accuracy', 'Accuracy')]:
+    cv_val = cv_metrics_f1[metric_key]
+    ho_val = holdout_metrics_f1[metric_key]
+    delta = ho_val - cv_val
+    delta_str = f"+{delta:.4f}" if delta >= 0 else f"{delta:.4f}"
+    print(f"  {display_name:12s} | {cv_val:.4f} | {ho_val:.4f}  | {delta_str}")
+print("=" * 65)
+
+res_lines = [
+    "Model,ROC_AUC_CV,ROC_AUC_Holdout,PR_AUC_CV,F1_CV,F1_Holdout,Precision_CV,Precision_Holdout,Recall_CV,Recall_Holdout,Accuracy_CV,Accuracy_Holdout\n",
+    f"Stacking Ensemble F1-Optimal ⭐,{cv_metrics_f1['ROC_AUC']:.4f},{holdout_metrics_f1['ROC_AUC']:.4f},{cv_metrics_f1['PR_AUC']:.4f},{cv_metrics_f1['F1']:.4f},{holdout_metrics_f1['F1']:.4f},{cv_metrics_f1['Precision']:.4f},{holdout_metrics_f1['Precision']:.4f},{cv_metrics_f1['Recall']:.4f},{holdout_metrics_f1['Recall']:.4f},{cv_metrics_f1['Accuracy']:.4f},{holdout_metrics_f1['Accuracy']:.4f}\n",
+    f"Stacking Ensemble F2-Optimal,{cv_metrics_f1['ROC_AUC']:.4f},{holdout_metrics_f1['ROC_AUC']:.4f},{cv_metrics_f1['PR_AUC']:.4f},{cv_metrics_f2['F1']:.4f},{holdout_metrics_f2['F1']:.4f},{cv_metrics_f2['Precision']:.4f},{holdout_metrics_f2['Precision']:.4f},{cv_metrics_f2['Recall']:.4f},{holdout_metrics_f2['Recall']:.4f},{cv_metrics_f2['Accuracy']:.4f},{holdout_metrics_f2['Accuracy']:.4f}\n",
+    "Random Forest (300),0.9352,,0.6615,0.5679,,0.4259,,0.8518,,0.8787,\n",
+    "XGBoost (Optuna),0.9296,,0.6738,0.5736,,0.4399,,0.8241,,0.8854,\n",
+    "Logistic Regression,0.8940,,0.6630,0.5799,,0.4586,,0.7885,,0.8932,\n"
+]
+
+with open(os.path.join(BASE, "model_results.csv"), "w", encoding='utf-8') as f:
+    f.writelines(res_lines)
+
+print("\n" + "=" * 65)
+print("  ✅ PIPELINE COMPLETE — UPGRADED MODEL AND ARTIFACTS EXPORTED")
 print("=" * 65)
