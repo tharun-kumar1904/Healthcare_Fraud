@@ -1,0 +1,127 @@
+=================================================================
+  HEALTHCARE PROVIDER FRAUD DETECTION PIPELINE
+  Sagility Data Science Case Study — Tharun
+=================================================================
+
+📁 Phase 1 — Loading Datasets...
+  ✅ Train Labels      :    5,410 rows ×  2 cols
+  ✅ Beneficiary(Tr)   :  138,556 rows × 25 cols
+  ✅ Inpatient(Tr)     :   40,474 rows × 30 cols
+  ✅ Outpatient(Tr)    :  517,737 rows × 27 cols
+  ✅ Unseen Labels     :    1,353 rows ×  1 cols
+  ✅ Bene(Te)          :   63,968 rows × 25 cols
+  ✅ Inpatient(Te)     :    9,551 rows × 30 cols
+  ✅ Outpatient(Te)    :  125,841 rows × 27 cols
+
+  Class Balance : Yes=506 | No=4904
+  Imbalance     : 9.7:1 (No:Yes)
+
+🔧 Phase 2 — Data Management & Preprocessing...
+  Train merged : 558,211 rows × 66 cols
+  Test  merged : 135,392 rows × 65 cols
+
+  Top missing columns (15 cols with nulls):
+    ClmProcedureCode_6                       100.0%
+    ClmProcedureCode_5                       100.0%
+    ClmProcedureCode_4                       100.0%
+    ClmProcedureCode_3                        99.8%
+    DOD                                       99.3%
+
+🔍 Phase 3 — Exploratory Data Analysis (generating plots)...
+  ✅ EDA plots saved (eda_plot1.png, eda_plot2.png, eda_plot3.png)
+
+⚙️  Phase 4 — Feature Engineering (53 Provider-Level Features)...
+  Engineering training features... (this takes ~1-2 min)
+  Engineering test features...
+  Train: 5410 providers × 59 features
+  Test : 1353 providers × 59 features
+
+🎯 Phase 5 — Feature Selection (MI + RF Importance)...
+  Computing Mutual Information...
+  Computing Random Forest Importance (100 trees)...
+  ✅ 35 features selected
+  Top 10 by combined rank:
+     1. TotalReimbursement
+     2. TotalHospitalDays
+     3. TotalDeductible
+     4. InpatientClaims
+     5. RepeatedDiagRatio
+     6. MaxClaimAmt
+     7. StdClaimAmt
+     8. ReimbPerBeneficiary
+     9. PeakMonthClaims
+    10. UniqueBeneficiaries
+
+🤖 Phase 6 — Model Training (5-Fold Stratified CV with SMOTE & Threshold Optimization)...
+
+  ▶ Training Logistic Regression with SMOTE...
+    Fold 1/5 done     Fold 2/5 done     Fold 3/5 done     Fold 4/5 done     Fold 5/5 done 
+    → ROC-AUC=0.894  PR-AUC=0.663  F1=0.5799  Recall=0.7885  (Opt Thresh=0.64)
+
+  ▶ Training Random Forest (300) with SMOTE...
+    Fold 1/5 done     Fold 2/5 done     Fold 3/5 done     Fold 4/5 done     Fold 5/5 done 
+    → ROC-AUC=0.9352  PR-AUC=0.6615  F1=0.5679  Recall=0.8518  (Opt Thresh=0.37)
+
+  ▶ Training XGBoost with SMOTE...
+    Fold 1/5 done     Fold 2/5 done     Fold 3/5 done     Fold 4/5 done     Fold 5/5 done 
+    → ROC-AUC=0.9296  PR-AUC=0.6738  F1=0.5736  Recall=0.8241  (Opt Thresh=0.25)
+
+  ===== MODEL COMPARISON =====
+                     ROC_AUC  PR_AUC      F1  Precision  Recall  Accuracy
+Random Forest (300)   0.9352  0.6615  0.5679     0.4259  0.8518    0.8787
+XGBoost               0.9296  0.6738  0.5736     0.4399  0.8241    0.8854
+Logistic Regression   0.8940  0.6630  0.5799     0.4586  0.7885    0.8932
+
+  ✅ Saved model_comparison.png
+  ✅ Saved confusion_matrix.png
+
+🔬 Phase 7 — Feature Importance Analysis...
+  Top 10 Important Features (Random Forest (300)):
+     1. TotalReimbursement                  Score=0.1413
+     2. MaxDiagCodes                        Score=0.1342
+     3. TotalDeductible                     Score=0.0755
+     4. TotalHospitalDays                   Score=0.0737
+     5. MaxClaimAmt                         Score=0.0592
+     6. InpatientClaims                     Score=0.0466
+     7. AvgNumProcCodes                     Score=0.0386
+     8. RepeatedDiagRatio                   Score=0.0363
+     9. AvgUniqueProcCodes                  Score=0.0311
+    10. ReimbPerBeneficiary                 Score=0.0298
+
+📤 Phase 8 — Generating Test Predictions & Submission...
+  Retraining Random Forest (300) on full training set with SMOTE...
+  Test providers  : 1353
+  Flagged fraud   : 259 (19.1%)
+  Prob min/max    : 0.0002 / 0.9958
+  ✅ Saved submission_dist.png
+
+💾 Saving Model Artifacts...
+  ✅ best_model.pkl  (Random Forest (300))
+  ✅ top_features.pkl (35 features)
+  ✅ pipeline_summary.json
+
+=================================================================
+  ✅ PIPELINE COMPLETE — ALL DELIVERABLES READY
+=================================================================
+
+  🏆 Best Model   : Random Forest (300)
+     ROC-AUC      : 0.9352
+     PR-AUC       : 0.6615
+     F1 Score     : 0.5679
+     Recall       : 0.8518
+     Precision    : 0.4259
+     Accuracy     : 0.8787
+
+  📋 Submission    : Tharun Kumar V_Submission.csv
+     Test Fraud   : 259/1353 (19.1%)
+
+  📦 Artifacts     : best_model.pkl, top_features.pkl
+                   : model_results.csv, shap_importance.csv
+                   : pipeline_summary.json
+
+  🖼  Plots         : eda_plot1.png, eda_plot2.png, eda_plot3.png
+                   : feature_importance.png, model_comparison.png
+                   : confusion_matrix.png, shap_plot.png, submission_dist.png
+
+  🚀 Launch App    : streamlit run streamlit_app.py
+=================================================================

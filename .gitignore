@@ -26,3 +26,8 @@ env/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ── CatBoost & Scratch ────────────────────────────────────────────────────────
+catboost_info/
+scratch/
+

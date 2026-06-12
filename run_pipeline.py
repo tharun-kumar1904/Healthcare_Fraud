@@ -1,21 +1,17 @@
 """
-Healthcare Provider Fraud Detection — Full Pipeline (Disk-Space Safe)
+Healthcare Provider Fraud Detection — Full Pipeline (GPU Accelerated)
 Author: Tharun | Sagility Data Science Case Study
-Uses: pandas, numpy, scikit-learn, xgboost (no heavy packages needed)
+Features: Advanced FE, Optuna, Stacking, Threshold Optimization
 """
 
 import sys, io
-# Force UTF-8 output so emoji print fine on Windows cp1252 terminals
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 import pandas as pd
 import numpy as np
-import matplotlib
+import matplotlib  # pyrefly: ignore [missing-import]
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import seaborn as sns
+import matplotlib.pyplot as plt  # pyrefly: ignore [missing-import]
+import seaborn as sns  # pyrefly: ignore [missing-import]
 import warnings
 import pickle
 import os
@@ -31,7 +27,7 @@ TD   = os.path.join(BASE, "Data", "Training Data") + os.sep
 UD   = os.path.join(BASE, "Data", "Unseen Data")   + os.sep
 
 print("=" * 65)
-print("  HEALTHCARE PROVIDER FRAUD DETECTION PIPELINE")
+print("  HEALTHCARE PROVIDER FRAUD DETECTION PIPELINE (GPU)")
 print("  Sagility Data Science Case Study — Tharun")
 print("=" * 65)
 
@@ -55,7 +51,6 @@ for name, df in [("Train Labels", train_labels), ("Beneficiary(Tr)", bene),
 fraud_dist = train_labels['PotentialFraud'].value_counts()
 print(f"\n  Class Balance : Yes={fraud_dist.get('Yes',0)} | No={fraud_dist.get('No',0)}")
 print(f"  Imbalance     : {fraud_dist.get('No',0)/max(fraud_dist.get('Yes',1),1):.1f}:1 (No:Yes)")
-
 
 # ─── PHASE 2: PREPROCESSING ───────────────────────────────────────────────────
 print("\n🔧 Phase 2 — Data Management & Preprocessing...")
@@ -109,91 +104,30 @@ train_merged = all_claims.merge(bene,   on='BeneID', how='left')
 test_merged  = all_claims_u.merge(bene_u, on='BeneID', how='left')
 train_merged = train_merged.merge(train_labels, on='Provider', how='left')
 
-print(f"  Train merged : {train_merged.shape[0]:,} rows × {train_merged.shape[1]} cols")
-print(f"  Test  merged : {test_merged.shape[0]:,} rows × {test_merged.shape[1]} cols")
-
-# Missing value report
-mv = train_merged.isnull().sum()
-mv_pct = (mv / len(train_merged) * 100).round(2)
-mv_df = pd.DataFrame({'Count': mv, 'Pct': mv_pct}).query('Count > 0').sort_values('Pct', ascending=False).head(15)
-print(f"\n  Top missing columns ({len(mv_df)} cols with nulls):")
-for col, row in mv_df.head(5).iterrows():
-    print(f"    {col:40s} {row['Pct']:5.1f}%")
-
-
-# ─── PHASE 3: EDA VISUALIZATIONS ─────────────────────────────────────────────
-print("\n🔍 Phase 3 — Exploratory Data Analysis (generating plots)...")
-
-fraud_merged    = train_merged[train_merged['PotentialFraud'] == 'Yes']
-nonfraud_merged = train_merged[train_merged['PotentialFraud'] == 'No']
-
-# EDA 1: Fraud label distribution
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-vc = train_labels['PotentialFraud'].value_counts()
-colors = ['#2ecc71', '#e74c3c']
-bars = axes[0].bar(vc.index, vc.values, color=colors, width=0.5, edgecolor='black')
-for bar, val in zip(bars, vc.values):
-    axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 10,
-                 f'{val}\n({val/vc.sum()*100:.1f}%)', ha='center', fontweight='bold')
-axes[0].set_title('Provider Fraud Label Distribution (Training Set)', fontweight='bold')
-axes[0].set_xlabel('Fraud Status'); axes[0].set_ylabel('Count')
-
-# EDA 2: Age distribution
-axes[1].hist([fraud_merged['Age'].dropna(), nonfraud_merged['Age'].dropna()],
-             bins=30, label=['Fraud', 'Non-Fraud'], color=['#e74c3c','#2ecc71'], alpha=0.7)
-axes[1].set_title('Patient Age Distribution: Fraud vs Non-Fraud', fontweight='bold')
-axes[1].set_xlabel('Age'); axes[1].set_ylabel('Count'); axes[1].legend()
-plt.tight_layout()
-plt.savefig(os.path.join(BASE, 'eda_plot1.png'), dpi=100, bbox_inches='tight')
-plt.close()
-
-# EDA 2: Claim amounts & hospital stay
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-axes[0].hist([fraud_merged['InscClaimAmtReimbursed'].clip(0, 10000),
-              nonfraud_merged['InscClaimAmtReimbursed'].clip(0, 10000)],
-             bins=50, label=['Fraud','Non-Fraud'], color=['#e74c3c','#2ecc71'], alpha=0.7)
-axes[0].set_title('Insurance Claim Amount Distribution', fontweight='bold')
-axes[0].set_xlabel('Claim Amount ($ capped at 10K)'); axes[0].legend()
-
-axes[1].hist([fraud_merged['HospitalStay'].clip(0,40),
-              nonfraud_merged['HospitalStay'].clip(0,40)],
-             bins=30, label=['Fraud','Non-Fraud'], color=['#e74c3c','#2ecc71'], alpha=0.7)
-axes[1].set_title('Hospital Stay Duration', fontweight='bold')
-axes[1].set_xlabel('Days'); axes[1].legend()
-plt.tight_layout()
-plt.savefig(os.path.join(BASE, 'eda_plot2.png'), dpi=100, bbox_inches='tight')
-plt.close()
-
-# EDA 3: Chronic conditions heatmap
-cc_cols = [c for c in train_merged.columns if 'ChronicCond' in c and c != 'ChronicCondCount']
-if cc_cols:
-    cc_labels = [c.replace('ChronicCond_','') for c in cc_cols]
-    fraud_avg    = fraud_merged[cc_cols].mean()
-    nonfraud_avg = nonfraud_merged[cc_cols].mean()
-    hmap_data = pd.DataFrame({'Fraud': fraud_avg.values, 'Non-Fraud': nonfraud_avg.values}, index=cc_labels)
-    fig, ax = plt.subplots(figsize=(12, 5))
-    sns.heatmap(hmap_data.T, annot=True, fmt='.2f', cmap='RdYlGn', linewidths=0.5, ax=ax, vmin=0, vmax=1)
-    ax.set_title('Chronic Condition Prevalence: Fraud vs Non-Fraud', fontweight='bold')
-    plt.tight_layout()
-    plt.savefig(os.path.join(BASE, 'eda_plot3.png'), dpi=100, bbox_inches='tight')
-    plt.close()
-
-print("  ✅ EDA plots saved (eda_plot1.png, eda_plot2.png, eda_plot3.png)")
-
-
 # ─── PHASE 4: FEATURE ENGINEERING ────────────────────────────────────────────
-print("\n⚙️  Phase 4 — Feature Engineering (53 Provider-Level Features)...")
+print("\n⚙️  Phase 4 — Feature Engineering (Advanced Features)...")
 
 def engineer_provider_features(merged_df):
+    merged_df = merged_df.copy()
+    merged_df['ClaimStartDt'] = pd.to_datetime(merged_df['ClaimStartDt'], errors='coerce')
+    merged_df['ClaimEndDt']   = pd.to_datetime(merged_df['ClaimEndDt'],   errors='coerce')
+    
+    # Pre-calculate IsSharedPatient before groupby
+    patient_provider_count = merged_df.groupby('BeneID')['Provider'].nunique()
+    shared = patient_provider_count[patient_provider_count > 3].index
+    merged_df['IsSharedPatient'] = merged_df['BeneID'].isin(shared).astype(int)
+
     g = merged_df.groupby('Provider')
     feats = pd.DataFrame()
-    # Volume
+    
+    # 1. Volume
     feats['TotalClaims']            = g['ClaimID'].count()
-    feats['InpatientClaims']        = g['ClaimType'].apply(lambda x: (x=='Inpatient').sum())
-    feats['OutpatientClaims']       = g['ClaimType'].apply(lambda x: (x=='Outpatient').sum())
+    feats['InpatientClaims']        = (merged_df['ClaimType'] == 'Inpatient').astype(int).groupby(merged_df['Provider']).sum()
+    feats['OutpatientClaims']       = (merged_df['ClaimType'] == 'Outpatient').astype(int).groupby(merged_df['Provider']).sum()
     feats['UniqueBeneficiaries']    = g['BeneID'].nunique()
     feats['UniqueAttendPhysicians'] = g['AttendingPhysician'].nunique()
-    # Financial
+    
+    # 2. Financial
     feats['AvgClaimAmt']            = g['InscClaimAmtReimbursed'].mean()
     feats['TotalReimbursement']     = g['InscClaimAmtReimbursed'].sum()
     feats['MaxClaimAmt']            = g['InscClaimAmtReimbursed'].max()
@@ -205,56 +139,51 @@ def engineer_provider_features(merged_df):
     feats['ReimbPerBeneficiary']    = feats['TotalReimbursement'] / (feats['UniqueBeneficiaries'] + 1)
     feats['ClaimsPerBeneficiary']   = feats['TotalClaims'] / (feats['UniqueBeneficiaries'] + 1)
     feats['InpatientRatio']         = feats['InpatientClaims'] / (feats['TotalClaims'] + 1)
-    feats['HighCostClaimRatio']     = g['InscClaimAmtReimbursed'].apply(
-                                        lambda x: (x > x.quantile(0.9)).mean() if len(x) > 1 else 0)
-    # Temporal
+    
+    provider_90th = g['InscClaimAmtReimbursed'].quantile(0.9)
+    merged_temp = merged_df[['Provider', 'InscClaimAmtReimbursed']].merge(provider_90th.rename('Amt_90th'), on='Provider', how='left')
+    is_high_cost = (merged_temp['InscClaimAmtReimbursed'] > merged_temp['Amt_90th']).astype(int)
+    feats['HighCostClaimRatio']     = is_high_cost.groupby(merged_temp['Provider']).mean()
+    
+    # 3. Temporal
     feats['AvgClaimDuration']       = g['ClaimDuration'].mean()
     feats['AvgHospitalStay']        = g['HospitalStay'].mean()
     feats['TotalHospitalDays']      = g['HospitalStay'].sum()
-    _df = merged_df.copy()
-    _df['ClaimMonth'] = _df['ClaimStartDt'].dt.month
-    feats['MonthlyClaimVariance']   = _df.groupby('Provider')['ClaimMonth'].std().fillna(0)
-    feats['PeakMonthClaims']        = _df.groupby('Provider')['ClaimMonth'].apply(
-                                        lambda x: x.value_counts().max() if len(x) > 0 else 0)
-    # Medical coding
+    
+    # 4. Medical coding
     feats['AvgNumDiagCodes']        = g['NumDiagCodes'].mean()
     feats['AvgNumProcCodes']        = g['NumProcCodes'].mean()
     feats['AvgUniqueDiagCodes']     = g['UniqueDiagCodes'].mean()
     feats['AvgUniqueProcCodes']     = g['UniqueProcCodes'].mean()
     feats['MaxDiagCodes']           = g['NumDiagCodes'].max()
-    # Patient demographics
+    
+    # 5. Patient demographics
     feats['AvgPatientAge']          = g['Age'].mean()
-    feats['MinPatientAge']          = g['Age'].min()
-    feats['MaxPatientAge']          = g['Age'].max()
-    feats['StdPatientAge']          = g['Age'].std().fillna(0)
     feats['PctDeadPatients']        = g['IsDead'].mean()
-    # Chronic disease
+    
+    # 6. Chronic disease
     feats['AvgChronicCondCount']    = g['ChronicCondCount'].mean()
     feats['MaxChronicCondCount']    = g['ChronicCondCount'].max()
-    feats['PctHighChronicCond']     = g['ChronicCondCount'].apply(lambda x: (x>=4).mean())
+    feats['PctHighChronicCond']     = (merged_df['ChronicCondCount'] >= 4).astype(int).groupby(merged_df['Provider']).mean()
     feats['RenalDiseaseRatio']      = g['RenalDisease'].mean()
     for col in ['ChronicCond_Alzheimer','ChronicCond_Heartfailure','ChronicCond_KidneyDisease',
                 'ChronicCond_Cancer','ChronicCond_Diabetes','ChronicCond_stroke','ChronicCond_Depression']:
         if col in merged_df.columns:
-            feats[f'Avg_{col}'] = merged_df.groupby('Provider')[col].mean()
-    # Insurance coverage
-    for col, alias in [('IPAnnualReimbursementAmt','AvgIPReimb'),
-                       ('OPAnnualReimbursementAmt','AvgOPReimb'),
-                       ('IPAnnualDeductibleAmt','AvgIPDeductible'),
-                       ('OPAnnualDeductibleAmt','AvgOPDeductible'),
-                       ('NoOfMonths_PartACov','AvgPartACovMonths'),
-                       ('NoOfMonths_PartBCov','AvgPartBCovMonths')]:
-        if col in merged_df.columns:
-            feats[alias] = merged_df.groupby('Provider')[col].mean()
-    # Physician / behavioral
-    feats['ClaimsPerPhysician'] = feats['TotalClaims'] / (feats['UniqueAttendPhysicians'] + 1)
-    feats['BenePerPhysician']   = feats['UniqueBeneficiaries'] / (feats['UniqueAttendPhysicians'] + 1)
+            feats[f'Avg_{col}'] = g[col].mean()
+            
+    # 7. Advanced Features Requested
+    feats['ClaimAmt_Skewness'] = g['InscClaimAmtReimbursed'].skew().fillna(0)
+    feats['ClaimAmt_Kurtosis'] = g['InscClaimAmtReimbursed'].apply(lambda x: x.kurtosis() if len(x) > 3 else 0).fillna(0)
+    feats['ClaimAmt_CV'] = (g['InscClaimAmtReimbursed'].std() / (g['InscClaimAmtReimbursed'].mean() + 1e-9)).fillna(0)
+    feats['SharedPatientRatio'] = g['IsSharedPatient'].mean()
+    feats['PctMaxDiagCodes'] = g['NumDiagCodes'].apply(lambda x: (x == 10).mean())
+    
+    # 8. Physician / behavioral
     bcc = merged_df.groupby(['Provider','BeneID'])['ClaimID'].count().reset_index()
     repeat   = bcc[bcc['ClaimID'] > 1].groupby('Provider')['BeneID'].count()
     all_bene = bcc.groupby('Provider')['BeneID'].count()
     feats['RepeatPatientRatio'] = (repeat / all_bene).fillna(0)
-    feats['PhysicianConcentration'] = merged_df.groupby('Provider')['AttendingPhysician'].apply(
-        lambda x: (x.value_counts(normalize=True)**2).sum() if len(x) > 0 else 0)
+    
     feats = feats.reset_index()
     return feats
 
@@ -266,14 +195,11 @@ test_feats  = engineer_provider_features(test_merged)
 train_feats = train_feats.merge(train_labels, on='Provider')
 train_feats['FraudLabel'] = (train_feats['PotentialFraud'] == 'Yes').astype(int)
 
-print(f"  Train: {train_feats.shape[0]} providers × {train_feats.shape[1]-3} features")
-print(f"  Test : {test_feats.shape[0]} providers × {test_feats.shape[1]-1} features")
-
-
 # ─── PHASE 5: FEATURE SELECTION ───────────────────────────────────────────────
 print("\n🎯 Phase 5 — Feature Selection (MI + RF Importance)...")
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.ensemble import RandomForestClassifier as RFC
+from sklearn.model_selection import train_test_split
 
 DROP_COLS    = ['Provider', 'PotentialFraud', 'FraudLabel']
 feature_cols = [c for c in train_feats.columns if c not in DROP_COLS]
@@ -281,170 +207,203 @@ for c in feature_cols:
     if c not in test_feats.columns:
         test_feats[c] = 0
 
-X = train_feats[feature_cols].fillna(0).astype(float)
-y = train_feats['FraudLabel']
+# Split into 90% training and 10% holdout stratified by target
+train_cv_feats, holdout_feats = train_test_split(train_feats, test_size=0.10, stratify=train_feats['FraudLabel'], random_state=42)
+print(f"  Split data: CV Train={train_cv_feats.shape[0]:,} providers | Holdout={holdout_feats.shape[0]:,} providers")
 
-print("  Computing Mutual Information...")
-mi     = mutual_info_classif(X, y, random_state=42)
+X_train_cv = train_cv_feats[feature_cols].fillna(0).astype(float)
+y_train_cv = train_cv_feats['FraudLabel']
+X_holdout  = holdout_feats[feature_cols].fillna(0).astype(float)
+y_holdout  = holdout_feats['FraudLabel']
+
+X_all = train_feats[feature_cols].fillna(0).astype(float)
+y_all = train_feats['FraudLabel']
+
+print("  Computing Mutual Information on CV Train...")
+mi     = mutual_info_classif(X_train_cv, y_train_cv, random_state=42)
 mi_ser = pd.Series(mi, index=feature_cols).sort_values(ascending=False)
 
-print("  Computing Random Forest Importance (100 trees)...")
+print("  Computing Random Forest Importance on CV Train (100 trees)...")
 rf_sel = RFC(n_estimators=100, random_state=42, n_jobs=-1)
-rf_sel.fit(X, y)
+rf_sel.fit(X_train_cv, y_train_cv)
 rf_imp = pd.Series(rf_sel.feature_importances_, index=feature_cols).sort_values(ascending=False)
 
 combined     = (mi_ser.rank() + rf_imp.rank()) / 2
 top_features = combined.sort_values(ascending=False).head(35).index.tolist()
 
-X_sel      = X[top_features]
-X_test_sel = test_feats[top_features].fillna(0).astype(float)
+X_train_cv_sel = X_train_cv[top_features]
+X_holdout_sel  = X_holdout[top_features]
+X_all_sel      = X_all[top_features]
+X_test_sel     = test_feats[top_features].fillna(0).astype(float)
 
 print(f"  ✅ {len(top_features)} features selected")
-print(f"  Top 10 by combined rank:")
-for i, f in enumerate(top_features[:10], 1):
-    print(f"    {i:2d}. {f}")
 
-# Feature importance plot
-fig, axes = plt.subplots(1, 2, figsize=(16, 6))
-mi_ser.head(20).sort_values().plot.barh(ax=axes[0], color='#3498db', alpha=0.8)
-axes[0].set_title('Mutual Information Score (Top 20)', fontweight='bold')
-rf_imp.head(20).sort_values().plot.barh(ax=axes[1], color='#e67e22', alpha=0.8)
-axes[1].set_title('Random Forest Feature Importance (Top 20)', fontweight='bold')
-plt.tight_layout()
-plt.savefig(os.path.join(BASE, 'feature_importance.png'), dpi=100, bbox_inches='tight')
-plt.close()
-print("  ✅ Saved feature_importance.png")
+# ─── PHASE 6: MODEL TRAINING (GPU ACCELERATED & OPTUNA) ──────────────────────
+print("\n🤖 Phase 6 — GPU Model Training & Optuna Tuning...")
 
-
-# ─── PHASE 6: MODEL TRAINING ─────────────────────────────────────────────────
-print("\n🤖 Phase 6 — Model Training (5-Fold Stratified CV with Class Weights)...")
-from sklearn.model_selection import StratifiedKFold
-from sklearn.linear_model import LogisticRegression
+import xgboost as xgb
+import lightgbm as lgb
+from catboost import CatBoostClassifier
+from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.metrics import (roc_auc_score, f1_score, precision_score,
                              recall_score, accuracy_score, average_precision_score,
-                             roc_curve, confusion_matrix)
-import xgboost as xgb
+                             roc_curve, precision_recall_curve, confusion_matrix)
+from sklearn.ensemble import StackingClassifier
+from sklearn.linear_model import LogisticRegression
+import optuna
+optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-cv  = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-spw = float(y.value_counts()[0]) / float(y.value_counts()[1])
+fraud_ratio = float((y_all == 0).sum()) / (y_all == 1).sum()
 
-models_dict = {
-    'Logistic Regression': LogisticRegression(
-        class_weight='balanced', max_iter=1000, random_state=42, C=1.0),
-    'Random Forest (300)': RFC(
-        n_estimators=300, max_depth=10, class_weight='balanced',
-        random_state=42, n_jobs=-1),
-    'XGBoost': xgb.XGBClassifier(
-        n_estimators=300, max_depth=6, learning_rate=0.05,
-        scale_pos_weight=spw, eval_metric='auc',
-        random_state=42, verbosity=0, tree_method='hist'),
+print("  ▶ Running Optuna on XGBoost (GPU) - 100 trials...")
+def objective(trial):
+    device_val = 'cuda'
+    try:
+        import torch
+        if not torch.cuda.is_available():
+            device_val = 'cpu'
+    except:
+        device_val = 'cpu'
+    params = {
+        'n_estimators':      trial.suggest_int('n_estimators', 200, 800),
+        'max_depth':         trial.suggest_int('max_depth', 3, 9),
+        'learning_rate':     trial.suggest_float('learning_rate', 0.01, 0.2, log=True),
+        'subsample':         trial.suggest_float('subsample', 0.6, 1.0),
+        'colsample_bytree':  trial.suggest_float('colsample_bytree', 0.5, 1.0),
+        'min_child_weight':  trial.suggest_int('min_child_weight', 1, 10),
+        'gamma':             trial.suggest_float('gamma', 0, 0.5),
+        'reg_alpha':         trial.suggest_float('reg_alpha', 0, 1.0),
+        'reg_lambda':        trial.suggest_float('reg_lambda', 0.5, 2.0),
+        'scale_pos_weight':  fraud_ratio,
+        'tree_method':       'hist',
+        'device':            device_val,
+        'eval_metric':       'aucpr',
+        'random_state':      42,
+        'verbosity':         0
+    }
+    model = xgb.XGBClassifier(**params)
+    score = cross_val_score(
+        model, X_train_cv_sel, y_train_cv, cv=5,
+        scoring='roc_auc', n_jobs=1
+    ).mean()
+    return score
+
+study = optuna.create_study(direction='maximize')
+study.optimize(objective, n_trials=100)
+print(f"  ✅ Best XGBoost ROC-AUC: {study.best_value:.4f}")
+
+print("\n  ▶ Training Stacking Classifier (5-Fold CV)...")
+device_val = 'cuda'
+try:
+    import torch
+    if not torch.cuda.is_available():
+        device_val = 'cpu'
+except:
+    device_val = 'cpu'
+
+estimators = [
+    ('xgb', xgb.XGBClassifier(
+        **study.best_params,
+        scale_pos_weight=fraud_ratio,
+        tree_method='hist', device=device_val,
+        eval_metric='aucpr', random_state=42, verbosity=0)),
+    ('lgb', lgb.LGBMClassifier(
+        boosting_type='dart',
+        class_weight='balanced', n_estimators=500,
+        learning_rate=0.05, max_depth=6,
+        drop_rate=0.1, max_drop=50, skip_drop=0.5,
+        random_state=42, verbose=-1)),
+    ('cat', CatBoostClassifier(
+        iterations=500, depth=6, learning_rate=0.05,
+        auto_class_weights='Balanced',
+        random_seed=42, verbose=0)),
+]
+
+stack_clf = StackingClassifier(
+    estimators=estimators,
+    final_estimator=LogisticRegression(class_weight='balanced'),
+    cv=5,
+    n_jobs=-1
+)
+
+from sklearn.model_selection import cross_val_predict
+print("  Generating Out-of-Fold predictions for Threshold Optimization...")
+oof_probs = cross_val_predict(stack_clf, X_train_cv_sel, y_train_cv, cv=5, method='predict_proba')[:, 1]
+
+# ─── PHASE 7: THRESHOLD OPTIMIZATION ─────────────────────────────────────────
+print("\n⚙️  Phase 7 — Threshold Optimization (F1 & F2-Score)...")
+precisions, recalls, thresholds = precision_recall_curve(y_train_cv, oof_probs)
+
+# F1 Optimization
+f1_scores = (2 * precisions * recalls) / (precisions + recalls + 1e-9)
+optimal_idx_f1 = np.argmax(f1_scores)
+optimal_threshold_f1 = thresholds[optimal_idx_f1] if optimal_idx_f1 < len(thresholds) else 0.5
+print(f"  ✅ Optimal F1 Threshold: {optimal_threshold_f1:.3f} | Best OOF F1: {f1_scores[optimal_idx_f1]:.4f}")
+
+# F2 Optimization
+f2_scores = (5 * precisions * recalls) / (4 * precisions + recalls + 1e-9)
+optimal_idx_f2 = np.argmax(f2_scores)
+optimal_threshold_f2 = thresholds[optimal_idx_f2] if optimal_idx_f2 < len(thresholds) else 0.5
+print(f"  ✅ Optimal F2 Threshold: {optimal_threshold_f2:.3f} | Best OOF F2: {f2_scores[optimal_idx_f2]:.4f}")
+
+# Train final model on 90% training data to predict on holdout
+print("\n  Training Stacking Classifier on 90% CV dataset...")
+stack_clf.fit(X_train_cv_sel, y_train_cv)
+
+print("  Predicting on Holdout set...")
+holdout_probs = stack_clf.predict_proba(X_holdout_sel)[:, 1]
+
+# Calculate holdout predictions
+holdout_pred_f1 = (holdout_probs >= optimal_threshold_f1).astype(int)
+holdout_pred_f2 = (holdout_probs >= optimal_threshold_f2).astype(int)
+
+print("\n  ===== MODEL CV PERFORMANCE (F1 OPTIMAL) =====")
+oof_pred_f1 = (oof_probs >= optimal_threshold_f1).astype(int)
+cv_metrics_f1 = {
+    'ROC_AUC': float(roc_auc_score(y_train_cv, oof_probs)),
+    'PR_AUC': float(average_precision_score(y_train_cv, oof_probs)),
+    'F1': float(f1_score(y_train_cv, oof_pred_f1)),
+    'Recall': float(recall_score(y_train_cv, oof_pred_f1)),
+    'Precision': float(precision_score(y_train_cv, oof_pred_f1)),
+    'Accuracy': float(accuracy_score(y_train_cv, oof_pred_f1))
+}
+for k, v in cv_metrics_f1.items():
+    print(f"  CV {k:10s}: {v:.4f}")
+
+print("\n  ===== MODEL HOLDOUT PERFORMANCE (F1 OPTIMAL) =====")
+holdout_metrics_f1 = {
+    'ROC_AUC': float(roc_auc_score(y_holdout, holdout_probs)),
+    'PR_AUC': float(average_precision_score(y_holdout, holdout_probs)),
+    'F1': float(f1_score(y_holdout, holdout_pred_f1)),
+    'Recall': float(recall_score(y_holdout, holdout_pred_f1)),
+    'Precision': float(precision_score(y_holdout, holdout_pred_f1)),
+    'Accuracy': float(accuracy_score(y_holdout, holdout_pred_f1))
+}
+for k, v in holdout_metrics_f1.items():
+    print(f"  Holdout {k:10s}: {v:.4f}")
+
+cv_metrics_f2 = {
+    'F1': float(f1_score(y_train_cv, (oof_probs >= optimal_threshold_f2).astype(int))),
+    'Recall': float(recall_score(y_train_cv, (oof_probs >= optimal_threshold_f2).astype(int))),
+    'Precision': float(precision_score(y_train_cv, (oof_probs >= optimal_threshold_f2).astype(int))),
+    'Accuracy': float(accuracy_score(y_train_cv, (oof_probs >= optimal_threshold_f2).astype(int)))
+}
+holdout_metrics_f2 = {
+    'F1': float(f1_score(y_holdout, holdout_pred_f2)),
+    'Recall': float(recall_score(y_holdout, holdout_pred_f2)),
+    'Precision': float(precision_score(y_holdout, holdout_pred_f2)),
+    'Accuracy': float(accuracy_score(y_holdout, holdout_pred_f2))
 }
 
-results_dict = {}
-oof_probs    = {}
+# Train final stack on all data (100% training data) for test predictions
+print("\n  Training Final Stacking Model on ALL (100%) training data...")
+stack_clf.fit(X_all_sel, y_all)
 
-for name, model in models_dict.items():
-    print(f"\n  ▶ Training {name}...")
-    oof_pred = np.zeros(len(y))
-    for fold, (tr_idx, val_idx) in enumerate(cv.split(X_sel, y)):
-        X_tr, X_val = X_sel.iloc[tr_idx], X_sel.iloc[val_idx]
-        y_tr, y_val = y.iloc[tr_idx], y.iloc[val_idx]
-        model.fit(X_tr, y_tr)
-        oof_pred[val_idx] = model.predict_proba(X_val)[:, 1]
-        print(f"    Fold {fold+1}/5 done", end=' ', flush=True)
-    print()
+# ─── PHASE 8: PREDICTIONS & ARTIFACTS ────────────────────────────────────────
+print("\n📤 Phase 8 — Generating Test Predictions & Saving...")
 
-    pred_class = (oof_pred >= 0.5).astype(int)
-    results_dict[name] = dict(
-        ROC_AUC   = round(roc_auc_score(y, oof_pred), 4),
-        PR_AUC    = round(average_precision_score(y, oof_pred), 4),
-        F1        = round(f1_score(y, pred_class), 4),
-        Precision = round(precision_score(y, pred_class, zero_division=0), 4),
-        Recall    = round(recall_score(y, pred_class), 4),
-        Accuracy  = round(accuracy_score(y, pred_class), 4),
-    )
-    oof_probs[name] = oof_pred
-    r = results_dict[name]
-    print(f"    → ROC-AUC={r['ROC_AUC']}  PR-AUC={r['PR_AUC']}  F1={r['F1']}  Recall={r['Recall']}")
-
-res_df = pd.DataFrame(results_dict).T.sort_values('ROC_AUC', ascending=False)
-print("\n  ===== MODEL COMPARISON =====")
-print(res_df.to_string())
-res_df.to_csv(os.path.join(BASE, "model_results.csv"))
-
-# ROC Curve plot
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-colors = ['#e74c3c', '#2ecc71', '#3498db']
-for (name, prob), color in zip(oof_probs.items(), colors):
-    fpr, tpr, _ = roc_curve(y, prob)
-    auc = roc_auc_score(y, prob)
-    axes[0].plot(fpr, tpr, label=f'{name} (AUC={auc:.3f})', color=color, lw=2)
-axes[0].plot([0,1],[0,1],'k--', alpha=0.5)
-axes[0].set_title('ROC Curves — All Models', fontweight='bold')
-axes[0].set_xlabel('False Positive Rate'); axes[0].set_ylabel('True Positive Rate')
-axes[0].legend(fontsize=9)
-
-res_df[['ROC_AUC','PR_AUC','F1','Recall']].plot(kind='bar', ax=axes[1],
-    colormap='Set2', alpha=0.85, edgecolor='black')
-axes[1].set_title('Model Performance Comparison', fontweight='bold')
-axes[1].set_ylabel('Score'); axes[1].set_ylim(0, 1.1)
-axes[1].tick_params(axis='x', rotation=30)
-axes[1].legend(loc='lower right')
-plt.tight_layout()
-plt.savefig(os.path.join(BASE, 'model_comparison.png'), dpi=100, bbox_inches='tight')
-plt.close()
-print("\n  ✅ Saved model_comparison.png")
-
-# Confusion matrix for best model
-best_model_name = res_df.index[0]
-best_oof        = oof_probs[best_model_name]
-best_pred       = (best_oof >= 0.5).astype(int)
-cm = confusion_matrix(y, best_pred)
-fig, ax = plt.subplots(figsize=(6, 5))
-sns.heatmap(pd.DataFrame(cm, index=['Legit','Fraud'], columns=['Pred Legit','Pred Fraud']),
-            annot=True, fmt='d', cmap='Blues', ax=ax)
-ax.set_title(f'Confusion Matrix — {best_model_name}', fontweight='bold')
-plt.tight_layout()
-plt.savefig(os.path.join(BASE, 'confusion_matrix.png'), dpi=100, bbox_inches='tight')
-plt.close()
-print("  ✅ Saved confusion_matrix.png")
-
-
-# ─── PHASE 7: FEATURE IMPORTANCE (as SHAP proxy) ─────────────────────────────
-print("\n🔬 Phase 7 — Feature Importance Analysis...")
-best_model = models_dict[best_model_name]
-
-if 'Random Forest' in best_model_name:
-    shap_imp = pd.Series(best_model.feature_importances_, index=top_features).sort_values(ascending=False)
-elif 'XGBoost' in best_model_name:
-    shap_imp = pd.Series(best_model.feature_importances_, index=top_features).sort_values(ascending=False)
-else:
-    shap_imp = rf_imp.reindex(top_features).fillna(0).sort_values(ascending=False)
-
-shap_imp.to_csv(os.path.join(BASE, "shap_importance.csv"), header=False)
-
-fig, ax = plt.subplots(figsize=(10, 7))
-shap_imp.head(20).sort_values().plot.barh(ax=ax, color='#8e44ad', alpha=0.85)
-ax.set_title(f'Feature Importance — {best_model_name}', fontweight='bold', fontsize=13)
-ax.set_xlabel('Importance Score')
-plt.tight_layout()
-plt.savefig(os.path.join(BASE, 'shap_plot.png'), dpi=100, bbox_inches='tight')
-plt.close()
-
-print(f"  Top 10 Important Features ({best_model_name}):")
-for i, (feat, val) in enumerate(shap_imp.head(10).items(), 1):
-    print(f"    {i:2d}. {feat:<35} Score={val:.4f}")
-
-
-# ─── PHASE 8: PREDICTIONS & SUBMISSION ───────────────────────────────────────
-print("\n📤 Phase 8 — Generating Test Predictions & Submission...")
-
-# Retrain best model on FULL training data
-print(f"  Retraining {best_model_name} on full training set...")
-best_model.fit(X_sel, y)
-
-test_proba = best_model.predict_proba(X_test_sel)[:, 1]
-test_class = (test_proba >= 0.5).astype(int)
+test_proba = stack_clf.predict_proba(X_test_sel)[:, 1]
+test_class = (test_proba >= optimal_threshold_f1).astype(int)
 
 submission = pd.DataFrame({
     'Provider':        test_feats['Provider'],
@@ -453,74 +412,57 @@ submission = pd.DataFrame({
 })
 
 fraud_cnt = (submission['Predicted_Class'] == 'Yes').sum()
+submission.to_csv(os.path.join(BASE, "Tharun Kumar V_Submission.csv"), index=False)
+print(f"  ✅ Test providers flagged as fraud: {fraud_cnt}")
 
-for fname in ["Tharun_Submission.csv", "Anupriya_Submission.csv"]:
-    submission.to_csv(os.path.join(BASE, fname), index=False)
-
-print(f"  Test providers  : {len(submission)}")
-print(f"  Flagged fraud   : {fraud_cnt} ({fraud_cnt/len(submission)*100:.1f}%)")
-print(f"  Prob min/max    : {test_proba.min():.4f} / {test_proba.max():.4f}")
-
-# Prediction distribution plot
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-vc = submission['Predicted_Class'].value_counts()
-axes[0].pie(vc.values, labels=vc.index, colors=['#2ecc71','#e74c3c'],
-            autopct='%1.1f%%', startangle=90)
-axes[0].set_title('Prediction Distribution (Test Set)', fontweight='bold')
-axes[1].hist(test_proba, bins=40, color='#3498db', alpha=0.8, edgecolor='black')
-axes[1].axvline(0.5, color='red', linestyle='--', lw=2, label='Threshold=0.5')
-axes[1].set_xlabel('Fraud Probability'); axes[1].set_ylabel('Count')
-axes[1].set_title('Probability Distribution', fontweight='bold')
-axes[1].legend()
-plt.tight_layout()
-plt.savefig(os.path.join(BASE, 'submission_dist.png'), dpi=100, bbox_inches='tight')
-plt.close()
-print("  ✅ Saved submission_dist.png")
-
-
-# ─── SAVE MODEL ARTIFACTS ────────────────────────────────────────────────────
-print("\n💾 Saving Model Artifacts...")
+# Save models
 with open(os.path.join(BASE, "best_model.pkl"), "wb") as f:
-    pickle.dump(best_model, f)
+    pickle.dump(stack_clf, f)
 with open(os.path.join(BASE, "top_features.pkl"), "wb") as f:
     pickle.dump(top_features, f)
-print(f"  ✅ best_model.pkl  ({best_model_name})")
-print(f"  ✅ top_features.pkl ({len(top_features)} features)")
 
-# Save summary JSON for Streamlit
+# Save validation data predictions for Streamlit
+oof_df = pd.DataFrame({
+    'Provider': train_cv_feats['Provider'],
+    'Actual_Label': y_train_cv,
+    'Predicted_Probability': oof_probs
+})
+oof_df.to_csv(os.path.join(BASE, "oof_predictions.csv"), index=False)
+
+holdout_df = pd.DataFrame({
+    'Provider': holdout_feats['Provider'],
+    'Actual_Label': y_holdout,
+    'Predicted_Probability': holdout_probs
+})
+holdout_df.to_csv(os.path.join(BASE, "holdout_predictions.csv"), index=False)
+
+# Save the full provider feats for dynamic EDA
+provider_eda = train_feats.copy()
+provider_eda.to_csv(os.path.join(BASE, "provider_eda_summary.csv"), index=False)
+print("  ✅ Saved oof_predictions.csv, holdout_predictions.csv, and provider_eda_summary.csv")
+
+# Dynamic Feature Importance from final Random Forest selection
+rf_sel.fit(X_all_sel, y_all)
+importance_list = rf_sel.feature_importances_.tolist()
+feature_importance_dict = dict(zip(top_features, importance_list))
+
 summary = {
-    'best_model': best_model_name,
-    'metrics':    results_dict[best_model_name],
-    'all_results': {k: v for k, v in results_dict.items()},
+    'best_model': 'Stacking Ensemble (XGB, LGBM, CatBoost)',
+    'optimal_threshold_f1': float(optimal_threshold_f1),
+    'optimal_threshold_f2': float(optimal_threshold_f2),
+    'cv_metrics_f1': cv_metrics_f1,
+    'holdout_metrics_f1': holdout_metrics_f1,
+    'cv_metrics_f2': cv_metrics_f2,
+    'holdout_metrics_f2': holdout_metrics_f2,
     'top_features': top_features,
+    'feature_importances': feature_importance_dict,
     'fraud_count':  int(fraud_cnt),
     'total_test':   int(len(submission)),
     'fraud_rate':   float(round(fraud_cnt/len(submission)*100, 2)),
 }
 with open(os.path.join(BASE, "pipeline_summary.json"), "w") as f:
     json.dump(summary, f, indent=2)
-print("  ✅ pipeline_summary.json")
 
-
-# ─── FINAL SUMMARY ───────────────────────────────────────────────────────────
-r = results_dict[best_model_name]
 print("\n" + "=" * 65)
-print("  ✅ PIPELINE COMPLETE — ALL DELIVERABLES READY")
-print("=" * 65)
-print(f"\n  🏆 Best Model   : {best_model_name}")
-print(f"     ROC-AUC      : {r['ROC_AUC']:.4f}")
-print(f"     PR-AUC       : {r['PR_AUC']:.4f}")
-print(f"     F1 Score     : {r['F1']:.4f}")
-print(f"     Recall       : {r['Recall']:.4f}")
-print(f"     Precision    : {r['Precision']:.4f}")
-print(f"     Accuracy     : {r['Accuracy']:.4f}")
-print(f"\n  📋 Submission    : Tharun_Submission.csv | Anupriya_Submission.csv")
-print(f"     Test Fraud   : {fraud_cnt}/{len(submission)} ({fraud_cnt/len(submission)*100:.1f}%)")
-print(f"\n  📦 Artifacts     : best_model.pkl, top_features.pkl")
-print(f"                   : model_results.csv, shap_importance.csv")
-print(f"                   : pipeline_summary.json")
-print(f"\n  🖼  Plots         : eda_plot1.png, eda_plot2.png, eda_plot3.png")
-print(f"                   : feature_importance.png, model_comparison.png")
-print(f"                   : confusion_matrix.png, shap_plot.png, submission_dist.png")
-print(f"\n  🚀 Launch App    : streamlit run streamlit_app.py")
+print("  ✅ PIPELINE COMPLETE — ADVANCED STRATEGIES APPLIED")
 print("=" * 65)
