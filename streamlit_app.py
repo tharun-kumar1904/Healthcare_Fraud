@@ -433,11 +433,11 @@ elif page == "Model Evaluation":
             f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
             acc = (tp + tn) / (tp + tn + fp + fn)
             
-            st.write(f"**Metrics at Threshold {th_select:.2f}:**")
-            st.write(f"* **Precision**: {prec*100:.2f}%")
-            st.write(f"* **Recall (Sensitivity)**: {rec*100:.2f}%")
-            st.write(f"* **F1-Score**: {f1*100:.2f}%")
-            st.write(f"* **Accuracy**: {acc*100:.2f}%")
+            st.markdown(f"**Metrics at Threshold {th_select:.2f}:**")
+            st.markdown(f"* **Precision**: {prec*100:.2f}%")
+            st.markdown(f"* **Recall (Sensitivity)**: {rec*100:.2f}%")
+            st.markdown(f"* **F1-Score**: {f1*100:.2f}%")
+            st.markdown(f"* **Accuracy**: {acc*100:.2f}%")
             
     st.info("The stacking ensemble F1-optimal threshold stands at 0.85, matching precision and recall scores. Lowering the threshold to 0.47 yields 90.2% recall, capturing a wider share of potential fraud at the cost of higher auditing overhead.")
 
@@ -511,8 +511,8 @@ elif page == "Predictions":
             c_flow1, c_flow2 = st.columns([1, 1.2])
             
             with c_flow1:
-                st.write(f"**Selected Provider**: {sel_prov}")
-                st.write(f"**Model Risk Probability**: {score*100:.2f}%")
+                st.markdown(f"**Selected Provider**: {sel_prov}")
+                st.markdown(f"**Model Risk Probability**: {score*100:.2f}%")
                 
                 # Use native Streamlit status message boxes to represent operational risk tiers
                 if score >= 0.8465:
@@ -528,7 +528,7 @@ elif page == "Predictions":
                 st.info(rec_act)
                 
             with c_flow2:
-                st.write("**Provider Metric Ratios vs Peer Median**")
+                st.markdown("**Provider Metric Ratios vs Peer Median**")
                 
                 # Retrieve features from test summary or training summary
                 features_source = None
@@ -547,10 +547,10 @@ elif page == "Predictions":
                     claims_ratio = prov_claims / 27.0
                     stay_ratio = prov_stay / 19.4
                     
-                    st.write(f"1. **Reimbursements**: Billed **${prov_reimb:,.2f}** (**{reimb_ratio:.1f}x** peer median).")
-                    st.write(f"2. **Claims Count**: Submitted **{prov_claims:.0f}** claims (**{claims_ratio:.1f}x** peer median).")
-                    st.write(f"3. **Inpatient stay**: Recorded **{prov_stay:.1f}** bed days (**{stay_ratio:.1f}x** peer mean).")
-                    st.write(f"4. **Max Diagnoses count**: Recorded **{prov_diag:.1f}** diagnoses per claim.")
+                    st.markdown(f"1. **Reimbursements**: Billed **${prov_reimb:,.2f}** (**{reimb_ratio:.1f}x** peer median).")
+                    st.markdown(f"2. **Claims Count**: Submitted **{prov_claims:.0f}** claims (**{claims_ratio:.1f}x** peer median).")
+                    st.markdown(f"3. **Inpatient stay**: Recorded **{prov_stay:.1f}** bed days (**{stay_ratio:.1f}x** peer mean).")
+                    st.markdown(f"4. **Max Diagnoses count**: Recorded **{prov_diag:.1f}** diagnoses per claim.")
                     
                     fig = go.Figure()
                     fig.add_trace(go.Bar(
