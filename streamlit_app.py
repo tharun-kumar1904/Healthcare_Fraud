@@ -185,7 +185,7 @@ if page == "Overview":
         """)
         
         st.subheader("Key Findings & Multipliers")
-        st.write("""
+        st.markdown("""
         Analysis of the historical training data reveals major differences between legitimate and fraudulent providers:
         * **Reimbursements**: Fraudulent providers claim a median of **$373,450** compared to **$15,055** for legitimate peers (**24.8x higher**).
         * **Claim Volume**: Fraudulent providers submit a median of **155.5 claims** compared to **27.0** for legitimate peers (**5.8x higher**).
@@ -278,7 +278,7 @@ elif page == "Data Analysis":
     st.write("Detailed visual analysis of the provider behavioral distributions.")
     
     st.subheader("Claim Amount Distribution")
-    st.write("Median Claim Reimbursements: **Fraudulent: $373,450** vs **Legitimate: $15,055**")
+    st.markdown("Median Claim Reimbursements: **Fraudulent: $373,450** vs **Legitimate: $15,055**")
     
     if provider_eda is not None:
         fig_df = provider_eda.copy()
@@ -298,7 +298,7 @@ elif page == "Data Analysis":
     st.info("Business Insight: The box plot shows that the reimbursement distribution for fraudulent providers is entirely shifted upward. This confirms systematic financial inflation compared to normal peer cohorts.")
 
     st.subheader("Hospital Stay Duration Distribution")
-    st.write("Average Hospital Stay (Total Bed Days): **Fraudulent: 265.6 days** vs **Legitimate: 19.4 days**")
+    st.markdown("Average Hospital Stay (Total Bed Days): **Fraudulent: 265.6 days** vs **Legitimate: 19.4 days**")
     
     if provider_eda is not None:
         # Capping stays at 99th percentile to remove extreme anomalies (e.g. 3000 days stay)
