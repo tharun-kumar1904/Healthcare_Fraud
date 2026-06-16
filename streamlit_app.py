@@ -987,7 +987,7 @@ elif page == "Audit Report":
     if submission is not None:
         top_5 = submission.sort_values(by="Probability", ascending=False).head(5)
         
-        report_text = "SAGILITY HEALTHCARE FRAUD ASSESSMENT - CRITICAL AUDIT TARGET REPORT\n"
+        report_text = "HEALTHCARE PROVIDER FRAUD ASSESSMENT - CRITICAL AUDIT TARGET REPORT\n"
         report_text += "==================================================================\n\n"
         
         for idx, row in top_5.iterrows():
