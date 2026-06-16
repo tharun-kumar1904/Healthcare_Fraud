@@ -6,7 +6,7 @@
 
 ---
 
-## 📌 Problem Statement
+## Problem Statement
 
 Healthcare fraud is a critical economic challenge, draining hundreds of billions of dollars annually from insurance providers, Medicare/Medicaid, and ultimately patients. Fraudulent organizations leverage billing vulnerabilities to submit phantom claims, overstate medical necessities, or systematically duplicate claim events. Traditional claims-auditing relies on rule-based processing, which is slow and struggles to detect shifting fraud patterns.
 
@@ -16,7 +16,7 @@ The primary target is the provider ID. Since fraud cases are relatively rare com
 
 ---
 
-## 🏗️ Solution Architecture
+## Solution Architecture
 
 ```
 Raw Data Ingestion
@@ -45,7 +45,7 @@ Operational Risk Tiers & Business ROI Calculator
 
 ---
 
-## 📋 Dataset Summary
+## Dataset Summary
 
 | Dataset Name | Row Count | Column Count | Missing Values | Duplicate Count | Memory Footprint | Description |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
@@ -53,14 +53,14 @@ Operational Risk Tiers & Business ROI Calculator
 | **Beneficiary (Train)** | 138,556 | 25 | 8,202 | 0 | 27.70 MB | Patient medical profile & coverages |
 | **Inpatient (Train)** | 40,474 | 30 | 128,103 | 0 | 9.20 MB | Inpatient claims details & dates |
 | **Outpatient (Train)** | 517,737 | 27 | 1,540,111 | 0 | 106.50 MB | Outpatient claims details & dates |
-| **Test Labels** | 1,353 | 1 | 1,353 | 0 | 0.01 MB | Assessment cohort provider list |
+| **Test Labels** | 1,353 | 1 | 1,353 | 0 | 0.01 MB | Evaluation cohort provider list |
 | **Beneficiary (Test)** | 34,640 | 25 | 2,050 | 0 | 6.90 MB | Test patient medical profiles |
 | **Inpatient (Test)** | 9,974 | 30 | 31,610 | 0 | 2.30 MB | Test inpatient claims details |
 | **Outpatient (Test)** | 125,576 | 27 | 373,710 | 0 | 25.80 MB | Test outpatient claims details |
 
 ---
 
-## ⚙️ Feature Engineering Summary
+## Feature Engineering Summary
 
 We engineer 61 provider-level features categorized into 5 distinct behavioural domains:
 
@@ -72,13 +72,13 @@ We engineer 61 provider-level features categorized into 5 distinct behavioural d
 
 ---
 
-## 📊 Model Performance
+## Model Performance
 
 Stratified cross-validation and holdout validation results:
 
 | Model | CV ROC-AUC | Holdout ROC-AUC | CV F1 | Holdout F1 | CV Recall | Holdout Recall |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Stacking Ensemble ⭐** | **0.9343** | **0.9567** | **0.6340** | **0.6783** | **69.67%** | **76.47%** |
+| **Stacking Ensemble** | **0.9343** | **0.9567** | **0.6340** | **0.6783** | **69.67%** | **76.47%** |
 | **Random Forest (300)** | 0.9352 | — | 0.5679 | — | 85.18% | — |
 | **XGBoost (Optuna)** | 0.9296 | — | 0.5736 | — | 82.41% | — |
 | **Logistic Regression** | 0.8940 | — | 0.5799 | — | 78.85% | — |
@@ -88,7 +88,7 @@ Stratified cross-validation and holdout validation results:
 
 ---
 
-## 🏆 Top 10 Fraud Signals (SHAP)
+## Top 10 Fraud Signals (SHAP)
 
 1. **TotalReimbursement (0.141):** Highest contributor. Excess billing value relative to size benchmarks.
 2. **MaxDiagCodes (0.134):** Billing maximum allowable diagnosis codes (upcoding signature).
@@ -103,18 +103,18 @@ Stratified cross-validation and holdout validation results:
 
 ---
 
-## 🛡️ Risk Tier Framework
+## Risk Tier Framework
 
 | Operational Risk Tier | Risk Score Range | Decision Threshold | Audit Action |
 | :--- | :---: | :---: | :--- |
-| 🔴 **Critical Risk** | &ge; 0.70 | F1-Optimal (0.865) | Immediate payment suspension + Special Investigation audit |
-| 🟠 **High Risk** | 0.50 - 0.69 | F2-Optimal (0.597) | Pre-payment claims audit + on-site clinical review |
-| 🟡 **Watch List** | 0.30 - 0.49 | N/A | Quarterly profile monitoring + peer volume comparison |
-| 🟢 **Low Risk** | < 0.30 | N/A | Standard automated claims processing |
+| **Critical Risk** | &ge; 0.70 | F1-Optimal (0.865) | Immediate payment suspension + Special Investigation audit |
+| **High Risk** | 0.50 - 0.69 | F2-Optimal (0.597) | Pre-payment claims audit + on-site clinical review |
+| **Watch List** | 0.30 - 0.49 | N/A | Quarterly profile monitoring + peer volume comparison |
+| **Low Risk** | < 0.30 | N/A | Standard automated claims processing |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Step 1: Install Dependencies
 ```bash
@@ -133,13 +133,13 @@ streamlit run streamlit_app.py
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 .
 ├── Data/                             # Raw CSV data files (git-ignored)
 ├── run_pipeline.py                   # Full model training and evaluation script
-├── streamlit_app.py                  # Dark-themed dashboard application
+├── streamlit_app.py                  # Streamlit dashboard application
 ├── requirements.txt                  # Python dependencies
 ├── packages.txt                      # System dependencies for Streamlit Cloud
 ├── README.md                         # Documentation
@@ -152,7 +152,7 @@ streamlit run streamlit_app.py
 
 ---
 
-## 📤 Submission Format
+## Submission Format
 
 The submission file `Tharun Kumar V_Submission.csv` contains predictions for the 1,353 test providers. It has the following columns:
 - **Provider:** Provider unique identifier.
@@ -161,7 +161,7 @@ The submission file `Tharun Kumar V_Submission.csv` contains predictions for the
 
 ---
 
-## 📚 References
+## References
 
 1. CMS Medicare claims research data.
 2. US Government Accountability Office (GAO) healthcare fraud reports.
@@ -171,6 +171,6 @@ The submission file `Tharun Kumar V_Submission.csv` contains predictions for the
 
 ---
 
-## 🔒 Confidentiality Note
+## Confidentiality Note
 
-This codebase is submitted as an assessment project. All dataset contents, outputs, and details are protected under standard non-disclosure agreements and intended solely for case study evaluation.
+This codebase is a professional case study and solution platform for healthcare fraud detection. All dataset contents, outputs, and details are protected under standard non-disclosure agreements.

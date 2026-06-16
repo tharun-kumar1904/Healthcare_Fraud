@@ -52,7 +52,7 @@
 <body>
 
 <div class="header">
-  <h1>🏥 Healthcare Provider Fraud Detection</h1>
+  <h1>Healthcare Provider Fraud Detection</h1>
   <p>End-to-End Machine Learning Solution &nbsp;|&nbsp; Healthcare Provider Fraud Case Study</p>
   <p style="margin-top:.5rem;opacity:.7">Model: Stacking Ensemble (XGB, LGBM, CatBoost) &nbsp;|&nbsp; ROC-AUC: 0.9345</p>
 </div>
@@ -66,14 +66,14 @@
 </div>
 
 <div class="section">
-  <h2>📊 Model Performance Results</h2>
+  <h2>Model Performance Results</h2>
   <p>5-Fold Stratified Cross-Validation with SMOTE oversampling for class imbalance (9.7:1 ratio):</p>
   <table class="metrics"><thead><tr><th>Model</th><th>ROC_AUC_CV</th><th>ROC_AUC_Holdout</th><th>PR_AUC_CV</th><th>F1_CV</th><th>F1_Holdout</th><th>Precision_CV</th><th>Precision_Holdout</th><th>Recall_CV</th><th>Recall_Holdout</th><th>Accuracy_CV</th><th>Accuracy_Holdout</th></tr></thead><tbody><tr style=""><td>Random Forest (300)</td><td>0.9352</td><td></td><td>0.6615</td><td>0.5679</td><td></td><td>0.4259</td><td></td><td>0.8518</td><td></td><td>0.8787</td><td></td></tr><tr style="font-weight:700;background:rgba(102,126,234,0.08);"><td>Stacking Ensemble F1-Optimal ⭐</td><td>0.9345</td><td>0.9579</td><td>0.6822</td><td>0.6332</td><td>0.6441</td><td>0.5645</td><td>0.5672</td><td>0.7209</td><td>0.7451</td><td>0.9220</td><td>0.9224</td></tr><tr style="font-weight:700;background:rgba(102,126,234,0.08);"><td>Stacking Ensemble F2-Optimal</td><td>0.9345</td><td>0.9579</td><td>0.6822</td><td>0.5576</td><td>0.5476</td><td>0.4097</td><td>0.3932</td><td>0.8725</td><td>0.9020</td><td>0.8706</td><td>0.8595</td></tr><tr style=""><td>XGBoost (Optuna)</td><td>0.9296</td><td></td><td>0.6738</td><td>0.5736</td><td></td><td>0.4399</td><td></td><td>0.8241</td><td></td><td>0.8854</td><td></td></tr><tr style=""><td>Logistic Regression</td><td>0.8940</td><td></td><td>0.6630</td><td>0.5799</td><td></td><td>0.4586</td><td></td><td>0.7885</td><td></td><td>0.8932</td><td></td></tr></tbody></table>
   <p style="margin-top:1rem;color:#667eea"><strong>Best Model: Stacking Ensemble (XGB, LGBM, CatBoost)</strong> — ROC-AUC: 0.9345 | F1: 0.6332 | Recall: 72.1% | Precision: 56.5%</p>
 </div>
 
 <div class="section">
-  <h2>🖼️ Visualizations & EDA</h2>
+  <h2>Visualizations & EDA</h2>
   <div class="plot-grid">
     
 <div class="plot-card">
@@ -112,13 +112,13 @@
 </div>
 
 <div class="section">
-  <h2>📋 Submission Preview — Tharun Kumar V_Submission.csv</h2>
+  <h2>Submission Preview — Tharun Kumar V_Submission.csv</h2>
   <p>1,353 test providers | <strong style="color:#e74c3c">169 Fraudulent (12.5%)</strong> | <strong style="color:#27ae60">1184 Legitimate</strong></p>
   <table class="metrics"><thead><tr><th>Provider</th><th>Probability</th><th>Predicted Class</th></tr></thead><tbody><tr><td>PRV51002</td><td>0.0945</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51006</td><td>0.0819</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51009</td><td>0.1007</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51010</td><td>0.166</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51018</td><td>0.1056</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51019</td><td>0.0777</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51020</td><td>0.087</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51022</td><td>0.333</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51028</td><td>0.0764</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51033</td><td>0.0785</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51034</td><td>0.0855</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51039</td><td>0.8659</td><td style="color:#e74c3c;font-weight:700">Yes</td></tr><tr><td>PRV51050</td><td>0.126</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51051</td><td>0.7678</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51069</td><td>0.9343</td><td style="color:#e74c3c;font-weight:700">Yes</td></tr><tr><td>PRV51073</td><td>0.9607</td><td style="color:#e74c3c;font-weight:700">Yes</td></tr><tr><td>PRV51079</td><td>0.423</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51080</td><td>0.4566</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51085</td><td>0.0877</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51087</td><td>0.0772</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51088</td><td>0.106</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51092</td><td>0.0813</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51094</td><td>0.0846</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51095</td><td>0.0817</td><td style="color:#27ae60">No</td></tr><tr><td>PRV51099</td><td>0.0876</td><td style="color:#27ae60">No</td></tr><tr><td colspan="3" style="text-align:center;color:#888">... 1328 more rows ...</td></tr></tbody></table>
 </div>
 
 <div class="section">
-  <h2>📓 Notebook Code</h2>
+  <h2>Notebook Code</h2>
   <div class="md-cell"><h2>🏥 Healthcare Provider Fraud Detection</h2>
 <h4>End-to-End Machine Learning Solution</h4>
 <strong>Submitted to:</strong> Healthcare Fraud Analytics (Case Study)
@@ -731,7 +731,7 @@ submission.head(10)
 </div>
 
 <div class="section">
-  <h2>💼 Business Recommendations</h2>
+  <h2>Business Recommendations</h2>
   <h3>Top Fraud Patterns Discovered</h3>
   <table class="metrics">
     <thead><tr><th>#</th><th>Pattern</th><th>Indicator</th><th>Risk</th></tr></thead>
@@ -747,10 +747,10 @@ submission.head(10)
   <table class="metrics">
     <thead><tr><th>Tier</th><th>Probability</th><th>Action</th></tr></thead>
     <tbody>
-      <tr><td style="color:#e74c3c">🔴 Critical</td><td>&ge; 0.70</td><td>Immediate investigation + payment hold</td></tr>
-      <tr><td style="color:#e67e22">🟠 High</td><td>0.50 – 0.69</td><td>Enhanced auditing + site visits</td></tr>
-      <tr><td style="color:#f39c12">🟡 Watch</td><td>0.30 – 0.49</td><td>Quarterly review + peer benchmarking</td></tr>
-      <tr><td style="color:#27ae60">🟢 Low</td><td>&lt; 0.30</td><td>Standard claims processing</td></tr>
+      <tr><td style="color:#e74c3c">Critical</td><td>&ge; 0.70</td><td>Immediate investigation + payment hold</td></tr>
+      <tr><td style="color:#e67e22">High</td><td>0.50 – 0.69</td><td>Enhanced auditing + site visits</td></tr>
+      <tr><td style="color:#f39c12">Watch</td><td>0.30 – 0.49</td><td>Quarterly review + peer benchmarking</td></tr>
+      <tr><td style="color:#27ae60">Low</td><td>&lt; 0.30</td><td>Standard claims processing</td></tr>
     </tbody>
   </table>
 </div>

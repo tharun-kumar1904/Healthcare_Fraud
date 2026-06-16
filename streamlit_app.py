@@ -69,7 +69,6 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stSidebar"] * { color: white !important; }
 [data-testid="stSidebar"] .stRadio > label { color: white !important; }
 
-.main { background: #0d1117; }
 .block-container { padding-top: 1.5rem !important; }
 
 .kpi-card {
@@ -92,10 +91,10 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
             white-space: nowrap;
             background: linear-gradient(135deg,#667eea,#a78bfa);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.kpi-lbl  { font-size: .8rem; color: var(--text-color); opacity: 0.75; margin-top: .2rem; letter-spacing: .5px; }
+.kpi-lbl  { font-size: .8rem; color: inherit; opacity: 0.75; margin-top: .2rem; letter-spacing: .5px; }
 
 .section-hdr {
-    font-size: 1.35rem; font-weight: 700; color: var(--text-color);
+    font-size: 1.35rem; font-weight: 700; color: inherit;
     border-left: 4px solid #667eea; padding-left: 1rem;
     margin: 1.8rem 0 1rem 0;
 }
@@ -117,21 +116,21 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     border-left: 3px solid #667eea;
     border-radius: 0 8px 8px 0;
     padding: .7rem 1rem; margin: .6rem 0;
-    color: var(--text-color); font-size: .9rem;
+    color: inherit; font-size: .9rem;
     opacity: 0.9;
 }
 
 .subtitle {
-    color: var(--text-color) !important;
+    color: inherit !important;
     opacity: 0.7;
 }
 
 .pipeline-step {
     display:flex; align-items:center; gap:.8rem;
-    background: rgba(255,255,255,0.03);
+    background: rgba(102,126,234,0.05);
     border-radius:10px; padding:.6rem .8rem; margin:.4rem 0;
-    border: 1px solid rgba(255,255,255,0.06);
-    color: var(--text-color);
+    border: 1px solid rgba(102,126,234,0.15);
+    color: inherit;
 }
 
 div[data-testid="metric-container"] {
@@ -140,8 +139,8 @@ div[data-testid="metric-container"] {
     border-radius: 12px; padding: .8rem 1rem;
 }
 .stTabs [data-baseweb="tab"] {
-    background: rgba(255,255,255,0.03);
-    border-radius: 8px 8px 0 0; color: var(--text-color); opacity: 0.7; font-weight:500;
+    background: rgba(102,126,234,0.04);
+    border-radius: 8px 8px 0 0; color: inherit; opacity: 0.7; font-weight:500;
 }
 .stTabs [aria-selected="true"] {
     background: rgba(102,126,234,0.15) !important;
@@ -151,10 +150,8 @@ div[data-testid="metric-container"] {
 """, unsafe_allow_html=True)
 
 PLOTLY_LAYOUT = dict(
-    template="plotly_dark",
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter", color="#ccd6f6", size=13),
     margin=dict(l=20, r=20, t=40, b=20),
 )
 COLOR_FRAUD   = "#e74c3c"
@@ -166,7 +163,7 @@ with st.sidebar:
     st.markdown("""
     <div style='text-align:center;padding:1rem 0'>
       <div style='font-size:1rem;font-weight:700;color:#a78bfa'>Healthcare Fraud Detection</div>
-      <div style='font-size:0.75rem;color:var(--text-color);opacity:0.7'>Fraud Analytics Platform</div>
+      <div style='font-size:0.75rem;color:rgba(255,255,255,0.7)'>Fraud Analytics Platform</div>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("---")
@@ -181,12 +178,12 @@ with st.sidebar:
     ], label_visibility="collapsed")
 
     st.markdown("---")
-    st.markdown("<div style='color:var(--text-color);opacity:0.7;font-size:.8rem'>LIVE MODEL METRICS</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color:rgba(255,255,255,0.7);font-size:.8rem'>LIVE MODEL METRICS</div>", unsafe_allow_html=True)
     st.markdown(f"<div style='color:#2ecc71;font-weight:700'>Holdout ROC-AUC &nbsp; {holdout_roc_auc:.4f}</div>", unsafe_allow_html=True)
     st.markdown(f"<div style='color:#667eea;font-weight:700'>Holdout F1 Score &nbsp; {holdout_f1:.4f}</div>", unsafe_allow_html=True)
     st.markdown(f"<div style='color:#f39c12;font-weight:700'>Holdout Recall &nbsp;&nbsp;&nbsp;&nbsp; {holdout_recall*100:.1f}%</div>", unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown(f"<div style='color:var(--text-color);opacity:0.7;font-size:.75rem;text-align:center'>Healthcare Fraud Analytics<br><b>{best_model_name}</b><br>Threshold: {best_threshold:.3f}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='color:rgba(255,255,255,0.7);font-size:.75rem;text-align:center'>Healthcare Fraud Analytics<br><b>{best_model_name}</b><br>Threshold: {best_threshold:.3f}</div>", unsafe_allow_html=True)
 
 @st.cache_resource
 def load_model():
@@ -495,20 +492,29 @@ elif page == "Investigation Dashboard":
         c_cl1, c_cl2 = st.columns(2)
         with c_cl1:
             st.markdown("#### Chronic Conditions Prevalence per Provider Class")
-            conditions = ["Alzheimer", "Heartfailure", "KidneyDisease", "Cancer", "Diabetes", "Stroke", "Depression"]
+            conditions = [
+                ("Alzheimer", "Avg_ChronicCond_Alzheimer"),
+                ("Heart Failure", "Avg_ChronicCond_Heartfailure"),
+                ("Kidney Disease", "Avg_ChronicCond_KidneyDisease"),
+                ("Cancer", "Avg_ChronicCond_Cancer"),
+                ("Diabetes", "Avg_ChronicCond_Diabetes"),
+                ("Stroke", "Avg_ChronicCond_stroke"),
+                ("Depression", "Avg_ChronicCond_Depression")
+            ]
+            cond_display_names = [c[0] for c in conditions]
             legit_means = []
             fraud_means = []
             if provider_eda is not None:
-                for cond in conditions:
-                    legit_means.append(provider_eda[provider_eda['FraudLabel']==0][f'Avg_ChronicCond_{cond}'].mean())
-                    fraud_means.append(provider_eda[provider_eda['FraudLabel']==1][f'Avg_ChronicCond_{cond}'].mean())
+                for name, col in conditions:
+                    legit_means.append(provider_eda[provider_eda['FraudLabel']==0][col].mean())
+                    fraud_means.append(provider_eda[provider_eda['FraudLabel']==1][col].mean())
             else:
                 legit_means = [0.3, 0.4, 0.2, 0.1, 0.5, 0.08, 0.2]
                 fraud_means = [0.45, 0.6, 0.35, 0.18, 0.65, 0.15, 0.3]
                 
             fig = go.Figure()
-            fig.add_trace(go.Bar(x=conditions, y=legit_means, name="Legitimate", marker_color=COLOR_LEGIT))
-            fig.add_trace(go.Bar(x=conditions, y=fraud_means, name="Fraudulent", marker_color=COLOR_FRAUD))
+            fig.add_trace(go.Bar(x=cond_display_names, y=legit_means, name="Legitimate", marker_color=COLOR_LEGIT))
+            fig.add_trace(go.Bar(x=cond_display_names, y=fraud_means, name="Fraudulent", marker_color=COLOR_FRAUD))
             fig.update_layout(**PLOTLY_LAYOUT, height=270, barmode="group", yaxis_title="Prevalence Rate")
             st.plotly_chart(fig, use_container_width=True)
             
@@ -598,7 +604,7 @@ elif page == "Live Risk Scoring":
     st.markdown('<div class="section-hdr">Live Risk Prediction Center</div>', unsafe_allow_html=True)
     
     t_man, t_bat, t_sub = st.tabs([
-        "Manual Assessment", "Batch Upload", "Submission Results"
+        "Manual Evaluation", "Batch Upload", "Submission Results"
     ])
     
     with t_man:
@@ -731,7 +737,7 @@ elif page == "Live Risk Scoring":
             c_sh1, c_sh2 = st.columns([1.1, 1])
             with c_sh1:
                 st.markdown("##### Test Risk Score Probability Distribution")
-                fig = px.histogram(submission, x="Probability", nbinsx=50, color_discrete_sequence=[COLOR_PRIMARY])
+                fig = px.histogram(submission, x="Probability", nbins=50, color_discrete_sequence=[COLOR_PRIMARY])
                 fig.update_layout(**PLOTLY_LAYOUT, height=250)
                 st.plotly_chart(fig, use_container_width=True)
             with c_sh2:
@@ -745,7 +751,7 @@ elif page == "Live Risk Scoring":
                 fig.update_layout(**PLOTLY_LAYOUT, height=250)
                 st.plotly_chart(fig, use_container_width=True)
                 
-            st.markdown("##### Sortable Provider Assessment Table")
+            st.markdown("##### Sortable Provider Evaluation Table")
             st.dataframe(submission.sort_values("Probability", ascending=False), use_container_width=True)
             
             sub_csv = submission.to_csv(index=False).encode('utf-8')
@@ -879,30 +885,30 @@ elif page == "Business Strategy":
         with c_p1:
             st.markdown("""
             <div class="kpi-card" style="text-align:left; padding:1.2rem; margin-bottom: 0.8rem; border-color: rgba(231,76,60,0.4)">
-              <div style="font-size:0.75rem; color:#e74c3c; font-weight:700">🔴 TIER 1 — CRITICAL</div>
-              <div style="font-size:1.15rem; font-weight:700; color:var(--text-color); margin-top:0.2rem">DRG Upcoding Schemes</div>
-              <div style="font-size:0.8rem; color:var(--text-color);opacity:0.7; margin-top:0.4rem">Maximizing diagnosis code fields (recording up to 10 codes) and chronic condition indicators to claim complex, higher-paying diagnostic category rates.</div>
+              <div style="font-size:0.75rem; color:#e74c3c; font-weight:700">TIER 1 — CRITICAL</div>
+              <div style="font-size:1.15rem; font-weight:700; color:inherit; margin-top:0.2rem">DRG Upcoding Schemes</div>
+              <div style="font-size:0.8rem; color:inherit; opacity:0.7; margin-top:0.4rem">Maximizing diagnosis code fields (recording up to 10 codes) and chronic condition indicators to claim complex, higher-paying diagnostic category rates.</div>
               <div style="margin-top:0.6rem; font-size:0.8rem; color:#e74c3c">Prevalence: <b>18.2%</b> | Est. Impact: <b>$22M / Year</b></div>
             </div>
             <div class="kpi-card" style="text-align:left; padding:1.2rem; border-color: rgba(231,76,60,0.4)">
-              <div style="font-size:0.75rem; color:#e74c3c; font-weight:700">🔴 TIER 2 — CRITICAL</div>
-              <div style="font-size:1.15rem; font-weight:700; color:var(--text-color); margin-top:0.2rem">Ghost Inpatient Bed Stays</div>
-              <div style="font-size:0.8rem; color:var(--text-color);opacity:0.7; margin-top:0.4rem">Artificially extending inpatient hospitalization duration or creating fictitious admissions. Flagged by high outlier inpatient stay counts.</div>
+              <div style="font-size:0.75rem; color:#e74c3c; font-weight:700">TIER 2 — CRITICAL</div>
+              <div style="font-size:1.15rem; font-weight:700; color:inherit; margin-top:0.2rem">Ghost Inpatient Bed Stays</div>
+              <div style="font-size:0.8rem; color:inherit; opacity:0.7; margin-top:0.4rem">Artificially extending inpatient hospitalization duration or creating fictitious admissions. Flagged by high outlier inpatient stay counts.</div>
               <div style="margin-top:0.6rem; font-size:0.8rem; color:#e74c3c">Prevalence: <b>14.5%</b> | Est. Impact: <b>$16.5M / Year</b></div>
             </div>
             """, unsafe_allow_html=True)
         with c_p2:
             st.markdown("""
             <div class="kpi-card" style="text-align:left; padding:1.2rem; margin-bottom: 0.8rem; border-color: rgba(243,156,18,0.4)">
-              <div style="font-size:0.75rem; color:#f39c12; font-weight:700">🟠 TIER 3 — HIGH RISK</div>
-              <div style="font-size:1.15rem; font-weight:700; color:var(--text-color); margin-top:0.2rem">Beneficiary Recycling Rings</div>
-              <div style="font-size:0.8rem; color:var(--text-color);opacity:0.7; margin-top:0.4rem">Repeatedly billing the same patient cohorts for redundant outpatient visits. Identified by high repeat patient indices.</div>
+              <div style="font-size:0.75rem; color:#f39c12; font-weight:700">TIER 3 — HIGH RISK</div>
+              <div style="font-size:1.15rem; font-weight:700; color:inherit; margin-top:0.2rem">Beneficiary Recycling Rings</div>
+              <div style="font-size:0.8rem; color:inherit; opacity:0.7; margin-top:0.4rem">Repeatedly billing the same patient cohorts for redundant outpatient visits. Identified by high repeat patient indices.</div>
               <div style="margin-top:0.6rem; font-size:0.8rem; color:#f39c12">Prevalence: <b>24.1%</b> | Est. Impact: <b>$11M / Year</b></div>
             </div>
             <div class="kpi-card" style="text-align:left; padding:1.2rem; border-color: rgba(243,156,18,0.4)">
-              <div style="font-size:0.75rem; color:#f39c12; font-weight:700">🟠 TIER 4 — HIGH RISK</div>
-              <div style="font-size:1.15rem; font-weight:700; color:var(--text-color); margin-top:0.2rem">Attending Physician Rings</div>
-              <div style="font-size:0.8rem; color:var(--text-color);opacity:0.7; margin-top:0.4rem">Multiple claims billed through singular physician IDs. Identified using attending physician concentration indexes.</div>
+              <div style="font-size:0.75rem; color:#f39c12; font-weight:700">TIER 4 — HIGH RISK</div>
+              <div style="font-size:1.15rem; font-weight:700; color:inherit; margin-top:0.2rem">Attending Physician Rings</div>
+              <div style="font-size:0.8rem; color:inherit; opacity:0.7; margin-top:0.4rem">Multiple claims billed through singular physician IDs. Identified using attending physician concentration indexes.</div>
               <div style="margin-top:0.6rem; font-size:0.8rem; color:#f39c12">Prevalence: <b>9.8%</b> | Est. Impact: <b>$7.8M / Year</b></div>
             </div>
             """, unsafe_allow_html=True)
@@ -912,10 +918,10 @@ elif page == "Business Strategy":
         
         st.markdown("##### 4-Tier Operational Framework")
         framework_data = pd.DataFrame([
-            {"Risk Tier": "🔴 Critical Risk", "Probability Range": ">= 0.70", "Target Auditing Threshold": "0.865 (F1-Optimal)", "Operational Action": "Immediate billing suspension + SIU investigation"},
-            {"Risk Tier": "🟠 High Risk", "Probability Range": "0.50 - 0.69", "Target Auditing Threshold": "0.597 (F2-Optimal)", "Operational Action": "Pre-payment claims audit + site review"},
-            {"Risk Tier": "🟡 Watch List", "Probability Range": "0.30 - 0.49", "Target Auditing Threshold": "N/A", "Operational Action": "Quarterly behavioral pattern comparison"},
-            {"Risk Tier": "🟢 Low Risk", "Probability Range": "< 0.30", "Target Auditing Threshold": "N/A", "Operational Action": "Baseline auto-processing"}
+            {"Risk Tier": "Critical Risk", "Probability Range": ">= 0.70", "Target Auditing Threshold": "0.865 (F1-Optimal)", "Operational Action": "Immediate billing suspension + SIU investigation"},
+            {"Risk Tier": "High Risk", "Probability Range": "0.50 - 0.69", "Target Auditing Threshold": "0.597 (F2-Optimal)", "Operational Action": "Pre-payment claims audit + site review"},
+            {"Risk Tier": "Watch List", "Probability Range": "0.30 - 0.49", "Target Auditing Threshold": "N/A", "Operational Action": "Quarterly behavioral pattern comparison"},
+            {"Risk Tier": "Low Risk", "Probability Range": "< 0.30", "Target Auditing Threshold": "N/A", "Operational Action": "Baseline auto-processing"}
         ])
         st.dataframe(framework_data, use_container_width=True)
         
@@ -987,7 +993,7 @@ elif page == "Audit Report":
     if submission is not None:
         top_5 = submission.sort_values(by="Probability", ascending=False).head(5)
         
-        report_text = "HEALTHCARE PROVIDER FRAUD ASSESSMENT - CRITICAL AUDIT TARGET REPORT\n"
+        report_text = "HEALTHCARE PROVIDER FRAUD EVALUATION - CRITICAL AUDIT TARGET REPORT\n"
         report_text += "==================================================================\n\n"
         
         for idx, row in top_5.iterrows():
@@ -995,13 +1001,11 @@ elif page == "Audit Report":
             prob = row["Probability"]
             risk_exposure = prob * 83000
             
-            badge_icon = "🔴"
             risk_tier = "Critical Risk"
             if prob < 0.7:
-                badge_icon = "🟠"
                 risk_tier = "High Risk"
             
-            st.markdown(f"### {badge_icon} Provider: {prov_id}")
+            st.markdown(f"### Provider: {prov_id}")
             
             c_aud1, c_aud2 = st.columns([1, 1.3])
             with c_aud1:
@@ -1019,7 +1023,7 @@ elif page == "Audit Report":
                     }
                 ))
                 fig.update_layout(**PLOTLY_LAYOUT, height=160)
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True, key=f"gauge_{prov_id}")
                 
             with c_aud2:
                 st.markdown(f"""
