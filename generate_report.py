@@ -15,7 +15,7 @@ from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-REPORT_PATH = os.path.join(BASE, 'Healthcare_Provider_Fraud_Detection_Report.docx')
+REPORT_PATH = os.path.join(BASE, 'Healthcare Provider Fraud Detection Report.docx')
 
 # Load actual pipeline summary
 summary_path = os.path.join(BASE, 'pipeline_summary.json')
@@ -230,7 +230,7 @@ sub_p.paragraph_format.space_after = Pt(180)
 
 meta_p = doc.add_paragraph()
 meta_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-meta_run = meta_p.add_run("Submitted to:\nSagility Data Science Panel\n\nDate: June 2026\nVersion: 1.0 — Final Submission Case Study")
+meta_run = meta_p.add_run("Submitted to:\nData Science Advisory Panel\n\nDate: June 2026\nVersion: 1.0 — Final Submission Case Study")
 meta_run.font.name = 'Calibri'
 meta_run.font.size = Pt(11)
 meta_run.font.bold = True
@@ -801,7 +801,7 @@ struct_text = (
     " ├── best_model.pkl                    # Serialized Stacking Ensemble model\n"
     " ├── top_features.pkl                  # Serialized list of top 35 features\n"
     " ├── Tharun Kumar V_Submission.csv     # Final predictions output file\n"
-    " └── Healthcare_Provider_Fraud_Detection_Report.docx  # Final Case Study Report\n"
+    " └── Healthcare Provider Fraud Detection Report.docx  # Final Case Study Report\n"
 )
 p_struct = doc.add_paragraph()
 r_struct = p_struct.add_run(struct_text)

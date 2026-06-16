@@ -51,7 +51,7 @@ if os.path.exists("pipeline_summary.json"):
 
 st.set_page_config(
     page_title="Healthcare Fraud Detector Case Study",
-    page_icon="🛡️",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -92,10 +92,10 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
             white-space: nowrap;
             background: linear-gradient(135deg,#667eea,#a78bfa);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.kpi-lbl  { font-size: .8rem; color: #ccd6f6; opacity: 0.8; margin-top: .2rem; letter-spacing: .5px; }
+.kpi-lbl  { font-size: .8rem; color: var(--text-color); opacity: 0.75; margin-top: .2rem; letter-spacing: .5px; }
 
 .section-hdr {
-    font-size: 1.35rem; font-weight: 700; color: #ccd6f6;
+    font-size: 1.35rem; font-weight: 700; color: var(--text-color);
     border-left: 4px solid #667eea; padding-left: 1rem;
     margin: 1.8rem 0 1rem 0;
 }
@@ -117,12 +117,13 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     border-left: 3px solid #667eea;
     border-radius: 0 8px 8px 0;
     padding: .7rem 1rem; margin: .6rem 0;
-    color: #ccd6f6; font-size: .9rem;
+    color: var(--text-color); font-size: .9rem;
     opacity: 0.9;
 }
 
 .subtitle {
-    color: #8892b0 !important;
+    color: var(--text-color) !important;
+    opacity: 0.7;
 }
 
 .pipeline-step {
@@ -130,7 +131,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     background: rgba(255,255,255,0.03);
     border-radius:10px; padding:.6rem .8rem; margin:.4rem 0;
     border: 1px solid rgba(255,255,255,0.06);
-    color: #ccd6f6;
+    color: var(--text-color);
 }
 
 div[data-testid="metric-container"] {
@@ -140,7 +141,7 @@ div[data-testid="metric-container"] {
 }
 .stTabs [data-baseweb="tab"] {
     background: rgba(255,255,255,0.03);
-    border-radius: 8px 8px 0 0; color: #8892b0; font-weight:500;
+    border-radius: 8px 8px 0 0; color: var(--text-color); opacity: 0.7; font-weight:500;
 }
 .stTabs [aria-selected="true"] {
     background: rgba(102,126,234,0.15) !important;
@@ -165,7 +166,7 @@ with st.sidebar:
     st.markdown("""
     <div style='text-align:center;padding:1rem 0'>
       <div style='font-size:1rem;font-weight:700;color:#a78bfa'>Healthcare Fraud Detection</div>
-      <div style='font-size:0.75rem;color:#8892b0'>Sagility Case Study</div>
+      <div style='font-size:0.75rem;color:var(--text-color);opacity:0.7'>Fraud Analytics Platform</div>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("---")
@@ -180,12 +181,12 @@ with st.sidebar:
     ], label_visibility="collapsed")
 
     st.markdown("---")
-    st.markdown("<div style='color:#8892b0;font-size:.8rem'>LIVE MODEL METRICS</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color:var(--text-color);opacity:0.7;font-size:.8rem'>LIVE MODEL METRICS</div>", unsafe_allow_html=True)
     st.markdown(f"<div style='color:#2ecc71;font-weight:700'>Holdout ROC-AUC &nbsp; {holdout_roc_auc:.4f}</div>", unsafe_allow_html=True)
     st.markdown(f"<div style='color:#667eea;font-weight:700'>Holdout F1 Score &nbsp; {holdout_f1:.4f}</div>", unsafe_allow_html=True)
     st.markdown(f"<div style='color:#f39c12;font-weight:700'>Holdout Recall &nbsp;&nbsp;&nbsp;&nbsp; {holdout_recall*100:.1f}%</div>", unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown(f"<div style='color:#8892b0;font-size:.75rem;text-align:center'>Sagility Data Science Assessment<br><b>{best_model_name}</b><br>Threshold: {best_threshold:.3f}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='color:var(--text-color);opacity:0.7;font-size:.75rem;text-align:center'>Healthcare Fraud Analytics<br><b>{best_model_name}</b><br>Threshold: {best_threshold:.3f}</div>", unsafe_allow_html=True)
 
 @st.cache_resource
 def load_model():
@@ -214,7 +215,7 @@ def load_results():
             "Accuracy_CV": [0.9248, 0.8875, 0.8787, 0.8854, 0.8932],
             "Accuracy_Holdout": [0.9316, 0.8706, None, None, None]
         }, index=[
-            "Stacking Ensemble F1-Optimal ⭐",
+            "Stacking Ensemble F1-Optimal",
             "Stacking Ensemble F2-Optimal",
             "Random Forest (300)",
             "XGBoost (Optuna)",
@@ -312,51 +313,51 @@ if page == "Executive Summary":
     with col_l:
         st.markdown('<div class="section-hdr">Problem Statement</div>', unsafe_allow_html=True)
         st.markdown("""
-        <div style='color:#a8b2d8;line-height:1.7'>
+        <div style='line-height:1.7;opacity:0.85'>
         Healthcare fraud costs the US insurance industry billions annually. This platform uses machine learning to identify anomalous billing behaviors indicating potential fraud.
         </div>""", unsafe_allow_html=True)
         
         st.markdown("""
         <div style='margin-top:0.8rem; display:grid; grid-template-columns: 1fr 1fr; gap: 10px;'>
           <div class="kpi-card" style="padding: 0.8rem 0.5rem;">
-            <div style="font-weight: 700; color: #e74c3c;">💰 3.1x Higher Billing</div>
-            <div style="font-size: 0.75rem; color: #8892b0; margin-top: 0.2rem;">Fraud providers average 3.1x higher claims reimbursement.</div>
+            <div style="font-weight: 700; color: #e74c3c;">3.1x Higher Billing</div>
+            <div style="font-size: 0.75rem; color: var(--text-color); opacity: 0.7; margin-top: 0.2rem;">Fraud providers average 3.1x higher claims reimbursement.</div>
           </div>
           <div class="kpi-card" style="padding: 0.8rem 0.5rem;">
-            <div style="font-weight: 700; color: #e74c3c;">🏥 2.8x Longer Stay</div>
-            <div style="font-size: 0.75rem; color: #8892b0; margin-top: 0.2rem;">Hospital stay duration is 2.8x longer indicating ghost billing.</div>
+            <div style="font-weight: 700; color: #e74c3c;">2.8x Longer Stay</div>
+            <div style="font-size: 0.75rem; color: var(--text-color); opacity: 0.7; margin-top: 0.2rem;">Hospital stay duration is 2.8x longer indicating ghost billing.</div>
           </div>
           <div class="kpi-card" style="padding: 0.8rem 0.5rem;">
-            <div style="font-weight: 700; color: #e74c3c;">🔄 4.3x Claims/Patient</div>
-            <div style="font-size: 0.75rem; color: #8892b0; margin-top: 0.2rem;">Providers submit 4.3x more claims per beneficiary.</div>
+            <div style="font-weight: 700; color: #e74c3c;">4.3x Claims/Patient</div>
+            <div style="font-size: 0.75rem; color: var(--text-color); opacity: 0.7; margin-top: 0.2rem;">Providers submit 4.3x more claims per beneficiary.</div>
           </div>
           <div class="kpi-card" style="padding: 0.8rem 0.5rem;">
-            <div style="font-weight: 700; color: #e74c3c;">🧬 +22% Chronic Conditions</div>
-            <div style="font-size: 0.75rem; color: #8892b0; margin-top: 0.2rem;">Upcoded chronic conditions count to justify high DRG rates.</div>
+            <div style="font-weight: 700; color: #e74c3c;">+22% Chronic Conditions</div>
+            <div style="font-size: 0.75rem; color: var(--text-color); opacity: 0.7; margin-top: 0.2rem;">Upcoded chronic conditions count to justify high DRG rates.</div>
           </div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown('<div class="section-hdr">End-to-End Solution Architecture</div>', unsafe_allow_html=True)
         phases = [
-            ("01","📁","Data Ingestion","Merge Inpatient, Outpatient, & Beneficiary data at Provider level"),
-            ("02","🔧","Data Preprocessing","Standardize column structures, handle missing values & temporal fields"),
-            ("03","📊","Phase 3 EDA","Extract financial & clinical behavior patterns across training cohort"),
-            ("04","⚙️","Feature Engineering","Generate 61 custom provider-level behavioral & financial features"),
-            ("05","🎯","Feature Selection","Mutual Information & Random Forest ranking to isolate top 35 features"),
-            ("06","🤖","Model Training","GPU-accelerated Optuna tuning + 5-Fold Stratified Stacking Ensemble"),
-            ("07","🔬","SHAP Interpretability","Generate SHAP feature values for local & global explainability"),
-            ("08","📤","Submission Generation","Score 1,353 test providers to output target predictions file"),
-            ("09","💼","Strategy Deployment","Develop risk tiers & ROI framework for operational auditing"),
+            ("01","","Data Ingestion","Merge Inpatient, Outpatient, & Beneficiary data at Provider level"),
+            ("02","","Data Preprocessing","Standardize column structures, handle missing values & temporal fields"),
+            ("03","","Phase 3 EDA","Extract financial & clinical behavior patterns across training cohort"),
+            ("04","","Feature Engineering","Generate 61 custom provider-level behavioral & financial features"),
+            ("05","","Feature Selection","Mutual Information & Random Forest ranking to isolate top 35 features"),
+            ("06","","Model Training","GPU-accelerated Optuna tuning + 5-Fold Stratified Stacking Ensemble"),
+            ("07","","SHAP Interpretability","Generate SHAP feature values for local & global explainability"),
+            ("08","","Submission Generation","Score 1,353 test providers to output target predictions file"),
+            ("09","","Strategy Deployment","Develop risk tiers & ROI framework for operational auditing"),
         ]
         for ph,icon,name,desc in phases:
             st.markdown(f"""
             <div class="pipeline-step">
               <span style='color:#667eea;font-weight:700;font-size:.8rem'>PH {ph}</span>
-              <span style='font-size:1.2rem'>{icon}</span>
+              <span>
               <div>
-                <div style='font-weight:600;color:#ccd6f6'>{name}</div>
-                <div style='color:#8892b0;font-size:.8rem'>{desc}</div>
+                <div style='font-weight:600;color:var(--text-color)'>{name}</div>
+                <div style='color:var(--text-color);opacity:0.7;font-size:.8rem'>{desc}</div>
               </div>
             </div>""", unsafe_allow_html=True)
 
@@ -605,17 +606,17 @@ elif page == "Live Risk Scoring":
         
         c_in1, c_in2, c_in3 = st.columns(3)
         with c_in1:
-            st.markdown("##### 📊 Claims Volume")
+            st.markdown("##### Claims Volume")
             in_claims = st.number_input("Total Claims", 1, 10000, 250)
             in_patients = st.number_input("Unique Patients", 1, 5000, 80)
             in_physicians = st.number_input("Unique Attending Physicians", 1, 200, 10)
         with c_in2:
-            st.markdown("##### 💰 Financial Billing")
+            st.markdown("##### Financial Billing")
             in_reimb = st.number_input("Total Reimbursement ($)", 0.0, 10000000.0, 450000.0)
             in_max_reimb = st.number_input("Max Reimbursement Single Claim ($)", 0.0, 500000.0, 12000.0)
             in_deduct = st.number_input("Total Deductible Paid ($)", 0.0, 50000.0, 8000.0)
         with c_in3:
-            st.markdown("##### 🏥 Clinical Metrics")
+            st.markdown("##### Clinical Metrics")
             in_stay = st.number_input("Total Hospital Days", 0.0, 50000.0, 850.0)
             in_diag = st.number_input("Avg Diagnosis Codes Count", 1.0, 10.0, 6.2)
             in_chronic = st.number_input("Avg Chronic Conditions Count", 0.0, 10.0, 4.8)
@@ -794,38 +795,38 @@ elif page == "Model Performance":
             st.markdown("""
             <div class="kpi-card" style="text-align:left; padding: 1rem; margin-bottom: 0.5rem; border-color: rgba(167,139,250,0.3)">
               <div style="font-weight:700;color:#a78bfa">1. TotalReimbursement</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.2rem">Estimated billing totals. Fraudulent providers submit vastly higher cumulative values to hit internal billing targets.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.2rem">Estimated billing totals. Fraudulent providers submit vastly higher cumulative values to hit internal billing targets.</div>
             </div>
             <div class="kpi-card" style="text-align:left; padding: 1rem; margin-bottom: 0.5rem; border-color: rgba(167,139,250,0.3)">
               <div style="font-weight:700;color:#a78bfa">2. MaxDiagCodes</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.2rem">Upcoding signature. Maxing out the allowable 10 diagnosis codes on claims to artificially justify billing complexity.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.2rem">Upcoding signature. Maxing out the allowable 10 diagnosis codes on claims to artificially justify billing complexity.</div>
             </div>
             <div class="kpi-card" style="text-align:left; padding: 1rem; margin-bottom: 0.5rem; border-color: rgba(167,139,250,0.3)">
               <div style="font-weight:700;color:#a78bfa">3. TotalDeductible</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.2rem">Deductible volumes. High patient deductible volumes indicate waived copays or phantom procedures.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.2rem">Deductible volumes. High patient deductible volumes indicate waived copays or phantom procedures.</div>
             </div>
             <div class="kpi-card" style="text-align:left; padding: 1rem; border-color: rgba(167,139,250,0.3)">
               <div style="font-weight:700;color:#a78bfa">4. TotalHospitalDays</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.2rem">Inpatient stay days. Artificially extended stays to collect high daily bed rates.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.2rem">Inpatient stay days. Artificially extended stays to collect high daily bed rates.</div>
             </div>
             """, unsafe_allow_html=True)
         with c_ex2:
             st.markdown("""
             <div class="kpi-card" style="text-align:left; padding: 1rem; margin-bottom: 0.5rem; border-color: rgba(167,139,250,0.3)">
               <div style="font-weight:700;color:#a78bfa">5. MaxClaimAmt</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.2rem">Single maximum bill value. Spotting outlier claims that deviate from typical services.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.2rem">Single maximum bill value. Spotting outlier claims that deviate from typical services.</div>
             </div>
             <div class="kpi-card" style="text-align:left; padding: 1rem; margin-bottom: 0.5rem; border-color: rgba(167,139,250,0.3)">
               <div style="font-weight:700;color:#a78bfa">6. InpatientClaims</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.2rem">Inpatient claims split. Inpatient events have higher baseline payouts, making them primary targets for billing abuse.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.2rem">Inpatient claims split. Inpatient events have higher baseline payouts, making them primary targets for billing abuse.</div>
             </div>
             <div class="kpi-card" style="text-align:left; padding: 1rem; margin-bottom: 0.5rem; border-color: rgba(167,139,250,0.3)">
               <div style="font-weight:700;color:#a78bfa">7. AvgNumProcCodes</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.2rem">Procedure code density. Over-submitting procedure codes per patient encounter.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.2rem">Procedure code density. Over-submitting procedure codes per patient encounter.</div>
             </div>
             <div class="kpi-card" style="text-align:left; padding: 1rem; border-color: rgba(167,139,250,0.3)">
               <div style="font-weight:700;color:#a78bfa">8. RepeatedDiagRatio</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.2rem">Copy-paste diagnosis patterns. Repetitively billing the exact same primary diagnosis for clinical convenience.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.2rem">Copy-paste diagnosis patterns. Repetitively billing the exact same primary diagnosis for clinical convenience.</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -879,14 +880,14 @@ elif page == "Business Strategy":
             st.markdown("""
             <div class="kpi-card" style="text-align:left; padding:1.2rem; margin-bottom: 0.8rem; border-color: rgba(231,76,60,0.4)">
               <div style="font-size:0.75rem; color:#e74c3c; font-weight:700">🔴 TIER 1 — CRITICAL</div>
-              <div style="font-size:1.15rem; font-weight:700; color:#ccd6f6; margin-top:0.2rem">DRG Upcoding Schemes</div>
-              <div style="font-size:0.8rem; color:#8892b0; margin-top:0.4rem">Maximizing diagnosis code fields (recording up to 10 codes) and chronic condition indicators to claim complex, higher-paying diagnostic category rates.</div>
+              <div style="font-size:1.15rem; font-weight:700; color:var(--text-color); margin-top:0.2rem">DRG Upcoding Schemes</div>
+              <div style="font-size:0.8rem; color:var(--text-color);opacity:0.7; margin-top:0.4rem">Maximizing diagnosis code fields (recording up to 10 codes) and chronic condition indicators to claim complex, higher-paying diagnostic category rates.</div>
               <div style="margin-top:0.6rem; font-size:0.8rem; color:#e74c3c">Prevalence: <b>18.2%</b> | Est. Impact: <b>$22M / Year</b></div>
             </div>
             <div class="kpi-card" style="text-align:left; padding:1.2rem; border-color: rgba(231,76,60,0.4)">
               <div style="font-size:0.75rem; color:#e74c3c; font-weight:700">🔴 TIER 2 — CRITICAL</div>
-              <div style="font-size:1.15rem; font-weight:700; color:#ccd6f6; margin-top:0.2rem">Ghost Inpatient Bed Stays</div>
-              <div style="font-size:0.8rem; color:#8892b0; margin-top:0.4rem">Artificially extending inpatient hospitalization duration or creating fictitious admissions. Flagged by high outlier inpatient stay counts.</div>
+              <div style="font-size:1.15rem; font-weight:700; color:var(--text-color); margin-top:0.2rem">Ghost Inpatient Bed Stays</div>
+              <div style="font-size:0.8rem; color:var(--text-color);opacity:0.7; margin-top:0.4rem">Artificially extending inpatient hospitalization duration or creating fictitious admissions. Flagged by high outlier inpatient stay counts.</div>
               <div style="margin-top:0.6rem; font-size:0.8rem; color:#e74c3c">Prevalence: <b>14.5%</b> | Est. Impact: <b>$16.5M / Year</b></div>
             </div>
             """, unsafe_allow_html=True)
@@ -894,14 +895,14 @@ elif page == "Business Strategy":
             st.markdown("""
             <div class="kpi-card" style="text-align:left; padding:1.2rem; margin-bottom: 0.8rem; border-color: rgba(243,156,18,0.4)">
               <div style="font-size:0.75rem; color:#f39c12; font-weight:700">🟠 TIER 3 — HIGH RISK</div>
-              <div style="font-size:1.15rem; font-weight:700; color:#ccd6f6; margin-top:0.2rem">Beneficiary Recycling Rings</div>
-              <div style="font-size:0.8rem; color:#8892b0; margin-top:0.4rem">Repeatedly billing the same patient cohorts for redundant outpatient visits. Identified by high repeat patient indices.</div>
+              <div style="font-size:1.15rem; font-weight:700; color:var(--text-color); margin-top:0.2rem">Beneficiary Recycling Rings</div>
+              <div style="font-size:0.8rem; color:var(--text-color);opacity:0.7; margin-top:0.4rem">Repeatedly billing the same patient cohorts for redundant outpatient visits. Identified by high repeat patient indices.</div>
               <div style="margin-top:0.6rem; font-size:0.8rem; color:#f39c12">Prevalence: <b>24.1%</b> | Est. Impact: <b>$11M / Year</b></div>
             </div>
             <div class="kpi-card" style="text-align:left; padding:1.2rem; border-color: rgba(243,156,18,0.4)">
               <div style="font-size:0.75rem; color:#f39c12; font-weight:700">🟠 TIER 4 — HIGH RISK</div>
-              <div style="font-size:1.15rem; font-weight:700; color:#ccd6f6; margin-top:0.2rem">Attending Physician Rings</div>
-              <div style="font-size:0.8rem; color:#8892b0; margin-top:0.4rem">Multiple claims billed through singular physician IDs. Identified using attending physician concentration indexes.</div>
+              <div style="font-size:1.15rem; font-weight:700; color:var(--text-color); margin-top:0.2rem">Attending Physician Rings</div>
+              <div style="font-size:0.8rem; color:var(--text-color);opacity:0.7; margin-top:0.4rem">Multiple claims billed through singular physician IDs. Identified using attending physician concentration indexes.</div>
               <div style="margin-top:0.6rem; font-size:0.8rem; color:#f39c12">Prevalence: <b>9.8%</b> | Est. Impact: <b>$7.8M / Year</b></div>
             </div>
             """, unsafe_allow_html=True)
@@ -924,22 +925,22 @@ elif page == "Business Strategy":
             st.markdown("""
             <div class="kpi-card" style="text-align:left; padding:1.2rem; margin-bottom: 0.8rem; border-color: rgba(102,126,234,0.3)">
               <div style="font-weight:700;color:#667eea">A. Automated Flagging Rules</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.3rem">Enforce model-derived constraints in the claims system. Flag claims matching identified high-risk patterns.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.3rem">Enforce model-derived constraints in the claims system. Flag claims matching identified high-risk patterns.</div>
             </div>
             <div class="kpi-card" style="text-align:left; padding:1.2rem; border-color: rgba(102,126,234,0.3)">
               <div style="font-weight:700;color:#667eea">B. Prior Authorization Rules</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.3rem">Require pre-payment approvals for critical high-risk provider classes before claims processing.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.3rem">Require pre-payment approvals for critical high-risk provider classes before claims processing.</div>
             </div>
             """, unsafe_allow_html=True)
         with c_st2:
             st.markdown("""
             <div class="kpi-card" style="text-align:left; padding:1.2rem; margin-bottom: 0.8rem; border-color: rgba(102,126,234,0.3)">
               <div style="font-weight:700;color:#667eea">C. Network Analysis Models</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.3rem">Track provider-patient linkages to capture shared physician rings and syndicate networks.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.3rem">Track provider-patient linkages to capture shared physician rings and syndicate networks.</div>
             </div>
             <div class="kpi-card" style="text-align:left; padding:1.2rem; border-color: rgba(102,126,234,0.3)">
               <div style="font-weight:700;color:#667eea">D. Targeted Audit Workflows</div>
-              <div style="font-size:0.8rem;color:#8892b0;margin-top:0.3rem">Direct auditing resources dynamically to high-value outliers to maximize financial recovery.</div>
+              <div style="font-size:0.8rem;color:var(--text-color);opacity:0.7;margin-top:0.3rem">Direct auditing resources dynamically to high-value outliers to maximize financial recovery.</div>
             </div>
             """, unsafe_allow_html=True)
 
