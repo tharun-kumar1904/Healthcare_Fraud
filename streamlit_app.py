@@ -922,23 +922,47 @@ elif page == "Model Performance":
             """, unsafe_allow_html=True)
 
     with t_eng:
-        st.markdown("#### Feature Engineering Matrix (57 Base Features)")
+        st.markdown("#### Feature Engineering Matrix (35 Active Features)")
         
         feats_list = [
+            {"Category": "Financial", "Feature Name": "TotalReimbursement", "Description": "Sum of all claim payouts", "Fraud Relevance": "Primary fraud multiplier indicator"},
+            {"Category": "Financial", "Feature Name": "TotalDeductible", "Description": "Sum of patient deductibles paid", "Fraud Relevance": "Flags copay waivers or ghost services"},
+            {"Category": "Financial", "Feature Name": "MaxClaimAmt", "Description": "Maximum claim amount recorded", "Fraud Relevance": "Detects outlier single billings"},
+            {"Category": "Financial", "Feature Name": "StdClaimAmt", "Description": "Standard deviation of claim amounts", "Fraud Relevance": "High variability suggests random fake billings"},
+            {"Category": "Financial", "Feature Name": "ReimbPerBeneficiary", "Description": "Total reimbursement / Unique patients", "Fraud Relevance": "Exceptional per-patient values flag upcoding"},
+            {"Category": "Financial", "Feature Name": "AvgClaimAmt", "Description": "Mean reimbursement per claim", "Fraud Relevance": "High averages indicate upcoding"},
+            {"Category": "Financial", "Feature Name": "DeductibleRatio", "Description": "Ratio of deductible to reimbursement", "Fraud Relevance": "Anomalous ratio flags cost-shifting schemes"},
+            {"Category": "Financial", "Feature Name": "AvgDeductible", "Description": "Mean deductible per claim", "Fraud Relevance": "Unusually high averages indicate upcoding"},
+            {"Category": "Financial", "Feature Name": "ReimbursementPerClaim", "Description": "Average reimbursement payout per claim", "Fraud Relevance": "Outlier average values point to upcoding"},
+            {"Category": "Financial", "Feature Name": "AvgIPDeductible", "Description": "Mean inpatient deductible per claim", "Fraud Relevance": "Flags inflated inpatient bills"},
+            {"Category": "Financial", "Feature Name": "MaxClaimToAvg_Ratio", "Description": "Ratio of max claim to average claim amount", "Fraud Relevance": "Flags providers with extreme single outlier claims"},
+            {"Category": "Financial", "Feature Name": "HighCostClaimRatio", "Description": "Ratio of claims exceeding high-cost threshold", "Fraud Relevance": "High ratios show systematic billing inflation"},
+            
             {"Category": "Volume", "Feature Name": "TotalClaims", "Description": "Total claims submitted by provider", "Fraud Relevance": "High claims rate suggests burst billing"},
             {"Category": "Volume", "Feature Name": "InpatientClaims", "Description": "Total inpatient claims submitted", "Fraud Relevance": "Inpatient pays higher baseline payouts"},
             {"Category": "Volume", "Feature Name": "OutpatientClaims", "Description": "Total outpatient claims submitted", "Fraud Relevance": "High outpatient volumes hide small billing stuffings"},
             {"Category": "Volume", "Feature Name": "UniqueBeneficiaries", "Description": "Count of distinct patients billed", "Fraud Relevance": "Small patient cohorts with high bills suggest fraud"},
-            {"Category": "Volume", "Feature Name": "UniqueAttendPhysicians", "Description": "Count of distinct attending physicians", "Fraud Relevance": "Rings use single physician IDs to bill widely"},
-            {"Category": "Financial", "Feature Name": "TotalReimbursement", "Description": "Sum of all claim payouts", "Fraud Relevance": "Primary fraud multiplier indicator"},
-            {"Category": "Financial", "Feature Name": "AvgClaimAmt", "Description": "Mean reimbursement per claim", "Fraud Relevance": "High averages indicate upcoding"},
-            {"Category": "Financial", "Feature Name": "MaxClaimAmt", "Description": "Maximum claim amount recorded", "Fraud Relevance": "Detects outlier single billings"},
-            {"Category": "Financial", "Feature Name": "TotalDeductible", "Description": "Sum of patient deductibles paid", "Fraud Relevance": "Flags copay waivers or ghost services"},
-            {"Category": "Financial", "Feature Name": "ReimbPerBeneficiary", "Description": "Total reimbursement / Unique patients", "Fraud Relevance": "Exceptional per-patient values flag upcoding"},
+            {"Category": "Volume", "Feature Name": "ClaimsPerActiveDays", "Description": "Average claims submitted per active day", "Fraud Relevance": "Unrealistically high frequency indicates automation"},
+            {"Category": "Volume", "Feature Name": "InpatientRatio", "Description": "Inpatient claims as a fraction of total claims", "Fraud Relevance": "Artificially shifting outpatient to inpatient services"},
+            {"Category": "Volume", "Feature Name": "ClaimsPerBeneficiary", "Description": "Average claims submitted per patient", "Fraud Relevance": "Indicates patient recycling schemes"},
+            {"Category": "Volume", "Feature Name": "ClaimsPerPhysician", "Description": "Average claims submitted per physician", "Fraud Relevance": "Attending physician overloading in syndicates"},
+            
             {"Category": "Clinical", "Feature Name": "TotalHospitalDays", "Description": "Sum of inpatient bed days", "Fraud Relevance": "Inpatient bed days generate high daily rates"},
-            {"Category": "Clinical", "Feature Name": "AvgNumDiagCodes", "Description": "Mean diagnosis codes per claim", "Fraud Relevance": "High codes rate signals upcoding"},
+            {"Category": "Clinical", "Feature Name": "DiagDiversityScore", "Description": "Entropy-based variety of diagnosis codes used", "Fraud Relevance": "Low diversity suggests repetitive copy-paste fraud templates"},
+            {"Category": "Clinical", "Feature Name": "PctMaxDiagCodes", "Description": "Percentage of claims with exactly 10 diagnosis codes", "Fraud Relevance": "Upcoding indicator to hit maximum reimbursement"},
+            {"Category": "Clinical", "Feature Name": "MaxDiagCodes", "Description": "Maximum diagnosis codes on a single claim", "Fraud Relevance": "Recording max allowable diagnoses to justify billing complexity"},
+            {"Category": "Clinical", "Feature Name": "AvgUniqueProcCodes", "Description": "Mean unique procedure codes per claim", "Fraud Relevance": "Indicates over-treatment or ghost procedures"},
+            {"Category": "Clinical", "Feature Name": "AvgNumProcCodes", "Description": "Mean procedure codes per claim", "Fraud Relevance": "Over-submitting procedure codes per encounter"},
+            {"Category": "Clinical", "Feature Name": "RenalDiseaseRatio", "Description": "Fraction of patients with renal disease", "Fraud Relevance": "Targeting high-risk, vulnerable patient cohorts"},
+            {"Category": "Clinical", "Feature Name": "AvgClaimDuration", "Description": "Mean claim duration in days", "Fraud Relevance": "Fictitiously long claims to draw higher daily rates"},
+            {"Category": "Clinical", "Feature Name": "AvgHospitalStay", "Description": "Mean hospital stay duration in days", "Fraud Relevance": "Indicates phantom inpatient stays"},
+            {"Category": "Clinical", "Feature Name": "Avg_ChronicCond_stroke", "Description": "Prevalence of stroke history in patient cohort", "Fraud Relevance": "Inflated chronic conditions to justify higher payouts"},
+            {"Category": "Clinical", "Feature Name": "AvgNumDiagCodes", "Description": "Mean diagnosis codes count", "Fraud Relevance": "High codes rate signals upcoding"},
+            
+            {"Category": "Behavioral", "Feature Name": "RepeatedDiagRatio", "Description": "Fraction of claims sharing identical primary diagnosis", "Fraud Relevance": "Automated billing templates without clinical variation"},
             {"Category": "Behavioral", "Feature Name": "RepeatPatientRatio", "Description": "Fraction of patients billed multiple times", "Fraud Relevance": "Indicates patient recycling schemes"},
-            {"Category": "Behavioral", "Feature Name": "PhysicianConcentration", "Description": "Attending physician Herfindahl index", "Fraud Relevance": "High concentration signals physician syndicates"},
+            
+            {"Category": "Temporal", "Feature Name": "AvgDaysBetweenClaims", "Description": "Mean days between consecutive claims", "Fraud Relevance": "Extremely short intervals suggest automated billing loops"},
             {"Category": "Temporal", "Feature Name": "WeekendClaimRatio", "Description": "Fraction of claims on Saturday/Sunday", "Fraud Relevance": "Legitimate providers rarely bill on weekends"}
         ]
         
@@ -947,15 +971,6 @@ elif page == "Model Performance":
         
         filtered_df = feats_df if cat_filter == "All" else feats_df[feats_df["Category"] == cat_filter]
         st.dataframe(filtered_df, use_container_width=True)
-        
-        fig = go.Figure(go.Pie(
-            labels=feats_df["Category"].value_counts().index,
-            values=feats_df["Category"].value_counts().values,
-            hole=0.45,
-            marker=dict(colors=PALETTE)
-        ))
-        fig.update_layout(**PLOTLY_LAYOUT, height=220)
-        st.plotly_chart(fig, use_container_width=True)
 
 elif page == "Business Strategy":
     st.markdown('<div class="section-hdr">Business Audit Strategy & Strategy Framework</div>', unsafe_allow_html=True)
