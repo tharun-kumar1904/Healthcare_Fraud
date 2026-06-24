@@ -698,19 +698,19 @@ elif page == "Live Risk Scoring":
         c_in1, c_in2, c_in3 = st.columns(3)
         with c_in1:
             st.markdown("##### Claims Volume")
-            in_claims = st.number_input("Total Claims", 1, 10000, init_claims)
-            in_patients = st.number_input("Unique Patients", 1, 5000, init_patients)
-            in_physicians = st.number_input("Unique Attending Physicians", 1, 200, init_physicians)
+            in_claims = st.number_input("Total Claims", min_value=1, max_value=max(10000, int(init_claims) * 2), value=int(init_claims))
+            in_patients = st.number_input("Unique Patients", min_value=1, max_value=max(5000, int(init_patients) * 2), value=int(init_patients))
+            in_physicians = st.number_input("Unique Attending Physicians", min_value=1, max_value=max(200, int(init_physicians) * 2), value=int(init_physicians))
         with c_in2:
             st.markdown("##### Financial Billing")
-            in_reimb = st.number_input("Total Reimbursement ($)", 0.0, 10000000.0, init_reimb)
-            in_max_reimb = st.number_input("Max Reimbursement Single Claim ($)", 0.0, 500000.0, init_max_reimb)
-            in_deduct = st.number_input("Total Deductible Paid ($)", 0.0, 50000.0, init_deduct)
+            in_reimb = st.number_input("Total Reimbursement ($)", min_value=0.0, max_value=max(10000000.0, float(init_reimb) * 2.0), value=float(init_reimb))
+            in_max_reimb = st.number_input("Max Reimbursement Single Claim ($)", min_value=0.0, max_value=max(500000.0, float(init_max_reimb) * 2.0), value=float(init_max_reimb))
+            in_deduct = st.number_input("Total Deductible Paid ($)", min_value=0.0, max_value=max(50000.0, float(init_deduct) * 2.0), value=float(init_deduct))
         with c_in3:
             st.markdown("##### Clinical Metrics")
-            in_stay = st.number_input("Total Hospital Days", 0.0, 50000.0, init_stay)
-            in_diag = st.number_input("Avg Diagnosis Codes Count", 1.0, 10.0, init_diag)
-            in_chronic = st.number_input("Avg Chronic Conditions Count", 0.0, 10.0, init_chronic)
+            in_stay = st.number_input("Total Hospital Days", min_value=0.0, max_value=max(50000.0, float(init_stay) * 2.0), value=float(init_stay))
+            in_diag = st.number_input("Avg Diagnosis Codes Count", min_value=1.0, max_value=max(20.0, float(init_diag) * 2.0), value=float(init_diag))
+            in_chronic = st.number_input("Avg Chronic Conditions Count", min_value=0.0, max_value=max(20.0, float(init_chronic) * 2.0), value=float(init_chronic))
             
         th_select = st.selectbox("Decision Threshold Profile", ["F1-Optimal (0.865)", "F2-Optimal (0.597)"])
         sel_th = 0.865 if "F1" in th_select else 0.597
