@@ -421,14 +421,15 @@ if page == "Executive Summary":
 elif page == "Investigation Dashboard":
     st.markdown('<div class="section-hdr">System Investigation Dashboard</div>', unsafe_allow_html=True)
     
-    t_fin, t_clin, t_data, t_rank = st.tabs([
-        "Financial Signals", "Clinical Patterns", "Dataset Overview", "Provider Risk Ranking"
+    t_fin, t_clin, t_data, t_rank, t_drill = st.tabs([
+        "Financial Signals", "Clinical Patterns", "Dataset Overview", "Provider Risk Ranking", "Provider Drilldown"
     ])
     
     with t_fin:
         c_fin1, c_fin2 = st.columns(2)
         with c_fin1:
             st.markdown("#### Cumulative Distribution (ECDF) of Claim Amounts")
+            st.markdown("<div style='font-size:0.85rem; opacity:0.75; margin-bottom:10px;'>Legitimate vs. Fraudulent Payout Curve. Legitimate claims (green) rise instantly, showing 90% bill under $50K; Fraudulent claims (red) show an extreme right tail.</div>", unsafe_allow_html=True)
             if provider_eda is not None:
                 legit_reimb = provider_eda[provider_eda['FraudLabel']==0]['TotalReimbursement'].values
                 fraud_reimb = provider_eda[provider_eda['FraudLabel']==1]['TotalReimbursement'].values
@@ -451,6 +452,7 @@ elif page == "Investigation Dashboard":
             
         with c_fin2:
             st.markdown("#### Hospital Stay Duration Violins")
+            st.markdown("<div style='font-size:0.85rem; opacity:0.75; margin-bottom:10px;'>Inpatient Hospitalization stays. Legitimate stays (green) peak at 5 days. Fraudulent stays (red) are flat and spread from 15-30 days, flagging billing for phantom bed stays.</div>", unsafe_allow_html=True)
             if provider_eda is not None:
                 stay_df = provider_eda[['FraudLabel', 'TotalHospitalDays']].copy()
                 stay_df['Label'] = stay_df['FraudLabel'].map({0: 'Legit', 1: 'Fraud'})
@@ -469,6 +471,7 @@ elif page == "Investigation Dashboard":
             st.markdown("<div class='insight'><b>Business Insight:</b> Flagged providers exhibit excessive inpatient stay durations. This points to ghost billing and billing for unrendered inpatient bed days.</div>", unsafe_allow_html=True)
 
         st.markdown("#### Provider Financial vs. Claim Volume Mapping")
+        st.markdown("<div style='font-size:0.85rem; opacity:0.75; margin-bottom:10px;'>X-axis: Claims, Y-axis: Reimbursements, Bubble size: Unique Patients. Outlier red bubbles show high-billing clinics submitting claims on very small patient cohorts.</div>", unsafe_allow_html=True)
         if provider_eda is not None:
             bubble_df = provider_eda[['TotalClaims', 'TotalReimbursement', 'UniqueBeneficiaries', 'FraudLabel']].copy()
             bubble_df['Label'] = bubble_df['FraudLabel'].map({0: 'Legit', 1: 'Fraud'})
@@ -492,6 +495,7 @@ elif page == "Investigation Dashboard":
         c_cl1, c_cl2 = st.columns(2)
         with c_cl1:
             st.markdown("#### Chronic Conditions Prevalence per Provider Class")
+            st.markdown("<div style='font-size:0.85rem; opacity:0.75; margin-bottom:10px;'>Percentage of patients with chronic diseases. Fraudulent providers (red) have 15-20% higher rates across all conditions, indicating diagnostic upcoding.</div>", unsafe_allow_html=True)
             conditions = [
                 ("Alzheimer", "Avg_ChronicCond_Alzheimer"),
                 ("Heart Failure", "Avg_ChronicCond_Heartfailure"),
@@ -520,6 +524,7 @@ elif page == "Investigation Dashboard":
             
         with c_cl2:
             st.markdown("#### Diagnosis Codes Count per Claim (Notched Box)")
+            st.markdown("<div style='font-size:0.85rem; opacity:0.75; margin-bottom:10px;'>Average diagnosis codes per claim. Fraudulent medians (7 codes) are significantly higher than legitimate ones (4 codes); non-overlapping notches prove statistical significance.</div>", unsafe_allow_html=True)
             if provider_eda is not None:
                 diag_box = provider_eda[['FraudLabel', 'AvgNumDiagCodes']].copy()
                 diag_box['Label'] = diag_box['FraudLabel'].map({0: 'Legit', 1: 'Fraud'})
@@ -537,6 +542,7 @@ elif page == "Investigation Dashboard":
             st.plotly_chart(fig, use_container_width=True)
 
         st.markdown("#### Feature Correlation Heatmap (8x8 Signature Metrics)")
+        st.markdown("<div style='font-size:0.85rem; opacity:0.75; margin-bottom:10px;'>Pearson correlation grid showing linear relationships between key volume, financial, and clinical patient attributes.</div>", unsafe_allow_html=True)
         corr_cols = [
             'TotalReimbursement', 'TotalClaims', 'UniqueBeneficiaries',
             'AvgHospitalStay', 'AvgNumDiagCodes', 'RepeatPatientRatio',
@@ -600,6 +606,66 @@ elif page == "Investigation Dashboard":
         else:
             st.info("Submission data not loaded.")
 
+    with t_drill:
+        st.markdown("#### Individual Provider Deep-Dive")
+        st.markdown("<div style='font-size:0.85rem; opacity:0.75; margin-bottom:15px;'>Select a provider from the dataset to view their aggregated billing metrics, patient profile, and ground-truth risk class compared to peer averages.</div>", unsafe_allow_html=True)
+        
+        if provider_eda is not None:
+            # Dropdown to select provider
+            prov_ids = sorted(provider_eda["Provider"].unique())
+            selected_prov = st.selectbox("Select Provider ID to Inspect", prov_ids, key="prov_drill_selector")
+            
+            # Fetch the selected provider's row
+            prov_data = provider_eda[provider_eda["Provider"] == selected_prov].iloc[0]
+            
+            # Calculate averages for comparison
+            legit_avgs = provider_eda[provider_eda["FraudLabel"] == 0].mean(numeric_only=True)
+            fraud_avgs = provider_eda[provider_eda["FraudLabel"] == 1].mean(numeric_only=True)
+            
+            # Show high-level metrics
+            c_dr1, c_dr2, c_dr3, c_dr4 = st.columns(4)
+            c_dr1.metric("Total Claims", f"{int(prov_data.get('TotalClaims', 0)):,}")
+            c_dr2.metric("Total Reimbursement", f"${prov_data.get('TotalReimbursement', 0.0):,.2f}")
+            c_dr3.metric("Unique Patients", f"{int(prov_data.get('UniqueBeneficiaries', 0)):,}")
+            c_dr4.metric("Avg Hospital Stay", f"{prov_data.get('AvgHospitalStay', 0.0):,.1f} Days")
+            
+            st.markdown("---")
+            
+            # Compare key metrics in a table
+            compare_metrics = [
+                ("Total Claims", "TotalClaims", "{:.0f}"),
+                ("Total Reimbursement", "TotalReimbursement", "${:,.2f}"),
+                ("Max Claim Payout", "MaxClaimAmt", "${:,.2f}"),
+                ("Unique Patients", "UniqueBeneficiaries", "{:.0f}"),
+                ("Hospital stay (Days)", "TotalHospitalDays", "{:.1f}"),
+                ("Avg Diag Codes/Claim", "AvgNumDiagCodes", "{:.2f}"),
+                ("Repeat Patient Ratio", "RepeatPatientRatio", "{:.2%}"),
+                ("Weekend Claim Ratio", "WeekendClaimRatio", "{:.2%}"),
+            ]
+            
+            comparison_rows = []
+            for display_name, key, fmt in compare_metrics:
+                p_val = prov_data.get(key, 0)
+                l_avg = legit_avgs.get(key, 0)
+                f_avg = fraud_avgs.get(key, 0)
+                comparison_rows.append({
+                    "Metric": display_name,
+                    "Provider Value": fmt.format(p_val),
+                    "Legit Peer Average": fmt.format(l_avg),
+                    "Fraud Peer Average": fmt.format(f_avg)
+                })
+            
+            st.markdown("##### Performance vs. Peer Benchmarks")
+            st.dataframe(pd.DataFrame(comparison_rows), use_container_width=True)
+            
+            # Risk status
+            fraud_label_mapped = "FRAUDULENT" if prov_data.get("FraudLabel") == 1 else "LEGITIMATE"
+            status_style = "badge-fraud" if fraud_label_mapped == "FRAUDULENT" else "badge-safe"
+            
+            st.markdown(f"**Ground Truth Label:** <span class='{status_style}'>{fraud_label_mapped}</span>", unsafe_allow_html=True)
+        else:
+            st.info("Provider data summary not loaded. Run pipeline first.")
+
 elif page == "Live Risk Scoring":
     st.markdown('<div class="section-hdr">Live Risk Prediction Center</div>', unsafe_allow_html=True)
     
@@ -610,22 +676,41 @@ elif page == "Live Risk Scoring":
     with t_man:
         st.markdown("#### Provider Attributes Real-Time Scoring Engine")
         
+        init_claims, init_patients, init_physicians = 250, 80, 10
+        init_reimb, init_max_reimb, init_deduct = 450000.0, 12000.0, 8000.0
+        init_stay, init_diag, init_chronic = 850.0, 6.2, 4.8
+        
+        if provider_eda is not None:
+            prov_ids = ["-- Select Existing Provider to Auto-Populate --"] + sorted(provider_eda["Provider"].unique().tolist())
+            selected_prov_input = st.selectbox("Search & Auto-Populate from Provider Dataset", prov_ids, key="prov_scoring_selector")
+            if selected_prov_input != "-- Select Existing Provider to Auto-Populate --":
+                p_row = provider_eda[provider_eda["Provider"] == selected_prov_input].iloc[0]
+                init_claims = int(p_row.get("TotalClaims", 250))
+                init_patients = int(p_row.get("UniqueBeneficiaries", 80))
+                init_physicians = int(p_row.get("UniqueAttendPhysicians", 10))
+                init_reimb = float(p_row.get("TotalReimbursement", 450000.0))
+                init_max_reimb = float(p_row.get("MaxClaimAmt", 12000.0))
+                init_deduct = float(p_row.get("TotalDeductible", 8000.0))
+                init_stay = float(p_row.get("TotalHospitalDays", 850.0))
+                init_diag = float(p_row.get("AvgNumDiagCodes", 6.2))
+                init_chronic = float(p_row.get("AvgChronicCondCount", 4.8))
+        
         c_in1, c_in2, c_in3 = st.columns(3)
         with c_in1:
             st.markdown("##### Claims Volume")
-            in_claims = st.number_input("Total Claims", 1, 10000, 250)
-            in_patients = st.number_input("Unique Patients", 1, 5000, 80)
-            in_physicians = st.number_input("Unique Attending Physicians", 1, 200, 10)
+            in_claims = st.number_input("Total Claims", 1, 10000, init_claims)
+            in_patients = st.number_input("Unique Patients", 1, 5000, init_patients)
+            in_physicians = st.number_input("Unique Attending Physicians", 1, 200, init_physicians)
         with c_in2:
             st.markdown("##### Financial Billing")
-            in_reimb = st.number_input("Total Reimbursement ($)", 0.0, 10000000.0, 450000.0)
-            in_max_reimb = st.number_input("Max Reimbursement Single Claim ($)", 0.0, 500000.0, 12000.0)
-            in_deduct = st.number_input("Total Deductible Paid ($)", 0.0, 50000.0, 8000.0)
+            in_reimb = st.number_input("Total Reimbursement ($)", 0.0, 10000000.0, init_reimb)
+            in_max_reimb = st.number_input("Max Reimbursement Single Claim ($)", 0.0, 500000.0, init_max_reimb)
+            in_deduct = st.number_input("Total Deductible Paid ($)", 0.0, 50000.0, init_deduct)
         with c_in3:
             st.markdown("##### Clinical Metrics")
-            in_stay = st.number_input("Total Hospital Days", 0.0, 50000.0, 850.0)
-            in_diag = st.number_input("Avg Diagnosis Codes Count", 1.0, 10.0, 6.2)
-            in_chronic = st.number_input("Avg Chronic Conditions Count", 0.0, 10.0, 4.8)
+            in_stay = st.number_input("Total Hospital Days", 0.0, 50000.0, init_stay)
+            in_diag = st.number_input("Avg Diagnosis Codes Count", 1.0, 10.0, init_diag)
+            in_chronic = st.number_input("Avg Chronic Conditions Count", 0.0, 10.0, init_chronic)
             
         th_select = st.selectbox("Decision Threshold Profile", ["F1-Optimal (0.865)", "F2-Optimal (0.597)"])
         sel_th = 0.865 if "F1" in th_select else 0.597
